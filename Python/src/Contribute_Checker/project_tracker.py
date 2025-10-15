@@ -89,9 +89,32 @@ class ProjectTracker:
         """Get contributors who have completed Hacktoberfest (4+ contributions)."""
         return [contrib for contrib in self.contributors.values() if contrib.is_hacktoberfest_complete()]
     
-    def get_leaderboard(self) -> List[Contributor]:
-        """Get contributors sorted by number of contributions (descending)."""
-        return sorted(self.contributors.values(), key=lambda c: c.get_contribution_count(), reverse=True)
+    def get_leaderboard(self) -> List[Dict[str, Any]]:
+        """Get contributors sorted by number of contributions (descending) with additional stats."""
+        contributors_with_stats = []
+        
+        for contributor in self.contributors.values():
+            unique_repos = set()
+            latest_contribution = None
+            
+            for contribution in contributor.contributions:
+                unique_repos.add(contribution.get('repo_name', ''))
+                contrib_date = contribution.get('date', '')
+                if not latest_contribution or contrib_date > latest_contribution:
+                    latest_contribution = contrib_date
+            
+            contributors_with_stats.append({
+                'name': contributor.name,
+                'github_username': contributor.github_username,
+                'email': contributor.email,
+                'contribution_count': contributor.get_contribution_count(),
+                'unique_repositories': len(unique_repos),
+                'latest_contribution': latest_contribution,
+                'joined_date': contributor.joined_date.isoformat() if contributor.joined_date else None
+            })
+        
+        # Sort by contribution count (descending)
+        return sorted(contributors_with_stats, key=lambda x: x['contribution_count'], reverse=True)
     
     def get_project_stats(self) -> Dict[str, Any]:
         """Get overall project statistics."""
@@ -99,14 +122,45 @@ class ProjectTracker:
         total_contributions = sum(c.get_contribution_count() for c in contributors)
         completed_count = len(self.get_completed_contributors())
         
+        # Get contribution types distribution
+        contributions_by_type = {}
+        unique_repositories = set()
+        
+        for contributor in contributors:
+            for contribution in contributor.contributions:
+                # Track contribution types
+                contrib_type = contribution.get('type', 'unknown')
+                contributions_by_type[contrib_type] = contributions_by_type.get(contrib_type, 0) + 1
+                
+                # Track unique repositories
+                unique_repositories.add(contribution.get('repo_name', ''))
+        
         return {
             "project_name": self.project_name,
             "total_contributors": len(contributors),
             "total_contributions": total_contributions,
             "completed_hacktoberfest": completed_count,
             "completion_rate": f"{(completed_count / len(contributors) * 100):.1f}%" if contributors else "0%",
+            "avg_contributions_per_contributor": total_contributions / len(contributors) if contributors else 0,
+            "unique_repositories": len(unique_repositories),
+            "contributions_by_type": contributions_by_type,
             "created_date": self.created_date.isoformat()
         }
+    
+    def get_recent_contributions(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """Get recent contributions across all contributors."""
+        all_contributions = []
+        
+        for contributor in self.contributors.values():
+            for contribution in contributor.contributions:
+                contribution_data = contribution.copy()
+                contribution_data['contributor'] = contributor
+                all_contributions.append(contribution_data)
+        
+        # Sort by date (most recent first)
+        all_contributions.sort(key=lambda x: x.get('date', ''), reverse=True)
+        
+        return all_contributions[:limit]
     
     def save_data(self) -> None:
         """Save contributor data to JSON file."""

@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Contributors - Hacktoberfest 2025{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5">
+                <i class="fas fa-users"></i>
+                Contributors
+            </h1>
+            <p class="text-muted">
+                Meet the amazing contributors to our Hacktoberfest 2025 project!
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('add_contributor') }}" class="btn btn-primary">
+                <i class="fas fa-user-plus"></i> Add New Contributor
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control" id="searchInput" 
+                       placeholder="Search contributors by name or username...">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <select class="form-select" id="sortSelect">
+                <option value="name">Sort by Name</option>
+                <option value="contributions">Sort by Contributions</option>
+                <option value="recent">Sort by Recent Activity</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Contributors Grid -->
+    <div class="row" id="contributorsGrid">
+        {% if contributors %}
+            {% for contributor in contributors %}
+            <div class="col-md-6 col-lg-4 mb-4 contributor-card" 
+                 data-name="{{ contributor.name.lower() }}" 
+                 data-username="{{ contributor.github_username.lower() }}"
+                 data-contributions="{{ contributor.get_contribution_count() }}">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <!-- Avatar and Name -->
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-shrink-0">
+                                <img src="https://github.com/{{ contributor.github_username }}.png" 
+                                     alt="{{ contributor.name }}" 
+                                     class="rounded-circle" 
+                                     width="60" height="60"
+                                     onerror="this.src='https://via.placeholder.com/60x60/6c757d/ffffff?text={{ contributor.name[0]|upper }}'">
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h5 class="card-title mb-1">{{ contributor.name }}</h5>
+                                <p class="card-text text-muted mb-0">
+                                    <i class="fab fa-github"></i>
+                                    <a href="https://github.com/{{ contributor.github_username }}" 
+                                       target="_blank" class="text-decoration-none">
+                                        @{{ contributor.github_username }}
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Stats -->
+                        <div class="row text-center mb-3">
+                            <div class="col-4">
+                                <div class="text-primary">
+                                    <i class="fas fa-code-branch fa-lg"></i>
+                                </div>
+                                <small class="text-muted">Contributions</small>
+                                <div class="fw-bold">{{ contributor.get_contribution_count() }}</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-success">
+                                    <i class="fas fa-calendar fa-lg"></i>
+                                </div>
+                                <small class="text-muted">Joined</small>
+                                <div class="fw-bold">{{ contributor.joined_date.strftime('%b %d') }}</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-info">
+                                    <i class="fas fa-folder fa-lg"></i>
+                                </div>
+                                <small class="text-muted">Repos</small>
+                                <div class="fw-bold">
+                                    {{ contributor.contributions|map(attribute='repo_name')|list|unique|list|length }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contribution Types -->
+                        {% if contributor.contributions %}
+                        <div class="mb-3">
+                            <small class="text-muted">Recent contributions:</small>
+                            <div class="mt-1">
+                                {% set contribution_types = contributor.contributions|map(attribute='type')|list %}
+                                {% for type in contribution_types[:3] %}
+                                    <span class="badge bg-{{ get_type_color(type) }} me-1">{{ type }}</span>
+                                {% endfor %}
+                                {% if contribution_types|length > 3 %}
+                                    <span class="badge bg-secondary">+{{ contribution_types|length - 3 }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Email -->
+                        {% if contributor.email %}
+                        <div class="mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-envelope"></i>
+                                {{ contributor.email }}
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-footer bg-transparent">
+                        <div class="d-grid">
+                            <a href="{{ url_for('contributor_detail', username=contributor.github_username) }}" 
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye"></i> View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No contributors yet!</h4>
+                    <p class="text-muted">Be the first to add a contributor to this project.</p>
+                    <a href="{{ url_for('add_contributor') }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> Add First Contributor
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination placeholder -->
+    {% if contributors|length > 12 %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav aria-label="Contributors pagination">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                    <li class="page-item active">
+                        <span class="page-link">1</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Next</span>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const searchTerm = this.value.toLowerCase();
+        const cards = document.querySelectorAll('.contributor-card');
+        
+        cards.forEach(card => {
+            const name = card.getAttribute('data-name');
+            const username = card.getAttribute('data-username');
+            
+            if (name.includes(searchTerm) || username.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+
+    // Sort functionality
+    document.getElementById('sortSelect').addEventListener('change', function() {
+        const sortBy = this.value;
+        const grid = document.getElementById('contributorsGrid');
+        const cards = Array.from(document.querySelectorAll('.contributor-card'));
+        
+        cards.sort((a, b) => {
+            switch(sortBy) {
+                case 'name':
+                    return a.getAttribute('data-name').localeCompare(b.getAttribute('data-name'));
+                case 'contributions':
+                    return parseInt(b.getAttribute('data-contributions')) - parseInt(a.getAttribute('data-contributions'));
+                case 'recent':
+                    // For now, just reverse the current order (assuming newest are last)
+                    return 0;
+                default:
+                    return 0;
+            }
+        });
+        
+        // Clear and re-append sorted cards
+        grid.innerHTML = '';
+        cards.forEach(card => grid.appendChild(card));
+    });
+</script>
+{% endblock %}

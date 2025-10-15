@@ -5,6 +5,7 @@ Main application entry point for the Hacktoberfest 2025 Project Tracker.
 
 import argparse
 import sys
+import os
 from typing import Optional
 
 from Contribute_Checker import ProjectTracker, Contributor
@@ -17,10 +18,12 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
+  python main.py --web                                               # Launch web interface
   python main.py --add-contributor "John Doe" johndoe john@example.com
   python main.py --add-contribution johndoe "my-repo" "bug-fix" "Fixed login issue" --pr 123
   python main.py --stats
   python main.py --leaderboard
+  python main.py --interactive                                       # Interactive CLI mode
         """
     )
     
@@ -76,6 +79,13 @@ Examples:
         "--interactive",
         action="store_true",
         help="Run in interactive mode"
+    )
+    
+    # Web UI mode
+    parser.add_argument(
+        "--web",
+        action="store_true",
+        help="Launch the web user interface"
     )
     
     args = parser.parse_args()
@@ -142,6 +152,16 @@ Examples:
                     print()
         else:
             print(f"❌ Contributor '{args.contributor_info}' not found!")
+    
+    elif args.web:
+        print("🎃 Launching Hacktoberfest 2025 Web UI...")
+        try:
+            import subprocess
+            import sys
+            subprocess.run([sys.executable, "run_web_ui.py"], cwd=os.path.dirname(__file__))
+        except Exception as e:
+            print(f"Error launching web UI: {e}")
+            print("Try running: python src/run_web_ui.py")
     
     elif args.interactive:
         interactive_mode(tracker)
