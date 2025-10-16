@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Hacktoberfest 2025{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="text-center">
+                <h1 class="display-4 mb-3">
+                    🎃 Hacktoberfest 2025 Project Tracker
+                </h1>
+                <p class="lead text-muted">
+                    Track your open source contributions and celebrate the spirit of Hacktoberfest!
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-5">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ stats.total_contributors }}</h4>
+                            <p class="card-text">Total Contributors</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ stats.total_contributions }}</h4>
+                            <p class="card-text">Total Contributions</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-code-branch fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ stats.unique_repositories }}</h4>
+                            <p class="card-text">Unique Repositories</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-folder fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ stats.avg_contributions_per_contributor|round(1) }}</h4>
+                            <p class="card-text">Avg per Contributor</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie"></i>
+                        Contributions by Type
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="contributionTypeChart" width="400" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar"></i>
+                        Top Contributors
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="topContributorsChart" width="400" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Contributions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clock"></i>
+                        Recent Contributions
+                    </h5>
+                    <a href="{{ url_for('add_contribution') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> Add Contribution
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if recent_contributions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Contributor</th>
+                                        <th>Repository</th>
+                                        <th>Type</th>
+                                        <th>Description</th>
+                                        <th>PR #</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for contribution in recent_contributions %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ url_for('contributor_detail', username=contribution.contributor.github_username) }}" 
+                                               class="text-decoration-none">
+                                                <strong>{{ contribution.contributor.name }}</strong><br>
+                                                <small class="text-muted">@{{ contribution.contributor.github_username }}</small>
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <code>{{ contribution.repo_name }}</code>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ get_type_color(contribution.type) }}">
+                                                {{ contribution.type }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="text-truncate d-inline-block" style="max-width: 300px;" 
+                                                  title="{{ contribution.description }}">
+                                                {{ contribution.description }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if contribution.pr_number %}
+                                                <span class="badge bg-info">#{{ contribution.pr_number }}</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ contribution.date[:10] }}
+                                            </small>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No contributions yet!</h5>
+                            <p class="text-muted">Start by adding some contributors and their contributions.</p>
+                            <a href="{{ url_for('add_contributor') }}" class="btn btn-primary me-2">
+                                <i class="fas fa-user-plus"></i> Add Contributor
+                            </a>
+                            <a href="{{ url_for('add_contribution') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-code"></i> Add Contribution
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Load statistics data for charts
+    fetch('/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            // Contribution Type Chart
+            const typeCtx = document.getElementById('contributionTypeChart').getContext('2d');
+            new Chart(typeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(data.contributions_by_type),
+                    datasets: [{
+                        data: Object.values(data.contributions_by_type),
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF',
+                            '#FF9F40'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        });
+
+    // Load leaderboard data for top contributors chart
+    fetch('/api/leaderboard')
+        .then(response => response.json())
+        .then(data => {
+            const topContributors = data.slice(0, 5); // Top 5 contributors
+            
+            const contributorsCtx = document.getElementById('topContributorsChart').getContext('2d');
+            new Chart(contributorsCtx, {
+                type: 'bar',
+                data: {
+                    labels: topContributors.map(c => c.name),
+                    datasets: [{
+                        label: 'Contributions',
+                        data: topContributors.map(c => c.contribution_count),
+                        backgroundColor: '#36A2EB',
+                        borderColor: '#36A2EB',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        });
+</script>
+{% endblock %}

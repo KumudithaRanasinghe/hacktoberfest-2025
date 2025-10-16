@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}Add Contribution - Hacktoberfest 2025{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Back Button -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="text-center">
+                <h1 class="display-5">
+                    <i class="fas fa-code"></i>
+                    Add New Contribution
+                </h1>
+                <p class="text-muted">
+                    Track a new open source contribution for Hacktoberfest 2025!
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            {% if form.github_username.choices|length == 0 %}
+                <!-- No Contributors Warning -->
+                <div class="alert alert-warning">
+                    <h5 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        No Contributors Found
+                    </h5>
+                    <p class="mb-0">
+                        You need to add at least one contributor before you can track contributions.
+                    </p>
+                    <hr>
+                    <a href="{{ url_for('add_contributor') }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> Add Contributor First
+                    </a>
+                </div>
+            {% else %}
+                <!-- Form -->
+                <div class="card shadow">
+                    <div class="card-body p-4">
+                        <form method="POST" novalidate>
+                            {{ form.hidden_tag() }}
+                            
+                            <!-- Contributor Selection -->
+                            <div class="mb-3">
+                                {{ form.github_username.label(class="form-label") }}
+                                {{ form.github_username(class="form-select form-select-lg" + (" is-invalid" if form.github_username.errors else "")) }}
+                                {% if form.github_username.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.github_username.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle"></i>
+                                    Select the contributor who made this contribution.
+                                </div>
+                            </div>
+
+                            <!-- Repository Name -->
+                            <div class="mb-3">
+                                {{ form.repo_name.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-folder"></i>
+                                    </span>
+                                    {{ form.repo_name(class="form-control form-control-lg" + (" is-invalid" if form.repo_name.errors else ""), 
+                                                      placeholder="my-awesome-project") }}
+                                    {% if form.repo_name.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.repo_name.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle"></i>
+                                    Enter the name of the repository where the contribution was made.
+                                </div>
+                            </div>
+
+                            <!-- Contribution Type -->
+                            <div class="mb-3">
+                                {{ form.contribution_type.label(class="form-label") }}
+                                {{ form.contribution_type(class="form-select form-select-lg" + (" is-invalid" if form.contribution_type.errors else "")) }}
+                                {% if form.contribution_type.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.contribution_type.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle"></i>
+                                    Choose the type of contribution that best describes this work.
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="mb-3">
+                                {{ form.description.label(class="form-label") }}
+                                {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), 
+                                                   rows="4",
+                                                   placeholder="Describe what was contributed, e.g., 'Fixed authentication bug in login system'") }}
+                                {% if form.description.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.description.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle"></i>
+                                    Provide a clear description of what was contributed or fixed.
+                                </div>
+                            </div>
+
+                            <!-- Pull Request Number -->
+                            <div class="mb-4">
+                                {{ form.pr_number.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-code-branch"></i> #
+                                    </span>
+                                    {{ form.pr_number(class="form-control form-control-lg" + (" is-invalid" if form.pr_number.errors else ""), 
+                                                      placeholder="123") }}
+                                    {% if form.pr_number.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.pr_number.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle"></i>
+                                    Optional: Enter the pull request number if this contribution was submitted as a PR.
+                                </div>
+                            </div>
+
+                            <!-- Preview Section -->
+                            <div class="card bg-light mb-4" id="previewCard" style="display: none;">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">
+                                        <i class="fas fa-eye"></i>
+                                        Contribution Preview
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <strong>Contributor:</strong><br>
+                                            <span id="previewContributor">-</span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>Repository:</strong><br>
+                                            <code id="previewRepo">-</code>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <strong>Type:</strong><br>
+                                            <span class="badge bg-primary" id="previewType">-</span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>PR Number:</strong><br>
+                                            <span id="previewPR">-</span>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <strong>Description:</strong><br>
+                                    <p class="mt-2 mb-0" id="previewDescription">-</p>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="d-grid gap-2">
+                                {{ form.submit(class="btn btn-success btn-lg") }}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tips Card -->
+                <div class="card mt-4 border-success">
+                    <div class="card-body">
+                        <h6 class="card-title text-success">
+                            <i class="fas fa-lightbulb"></i>
+                            Tips for Tracking Contributions
+                        </h6>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success"></i>
+                                Be specific in your descriptions to help others understand the contribution
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success"></i>
+                                Include the PR number when available for easy reference
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success"></i>
+                                Choose the most appropriate contribution type for better categorization
+                            </li>
+                            <li>
+                                <i class="fas fa-check text-success"></i>
+                                Track both code and non-code contributions (documentation, testing, etc.)
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Form elements
+    const contributorSelect = document.getElementById('github_username');
+    const repoInput = document.getElementById('repo_name');
+    const typeSelect = document.getElementById('contribution_type');
+    const descriptionInput = document.getElementById('description');
+    const prInput = document.getElementById('pr_number');
+    const previewCard = document.getElementById('previewCard');
+
+    // Preview elements
+    const previewContributor = document.getElementById('previewContributor');
+    const previewRepo = document.getElementById('previewRepo');
+    const previewType = document.getElementById('previewType');
+    const previewDescription = document.getElementById('previewDescription');
+    const previewPR = document.getElementById('previewPR');
+
+    function updatePreview() {
+        const contributor = contributorSelect.options[contributorSelect.selectedIndex]?.text || '';
+        const repo = repoInput.value.trim();
+        const type = typeSelect.options[typeSelect.selectedIndex]?.text || '';
+        const description = descriptionInput.value.trim();
+        const pr = prInput.value.trim();
+
+        if (contributor && repo && type && description) {
+            previewCard.style.display = 'block';
+            previewContributor.textContent = contributor;
+            previewRepo.textContent = repo;
+            previewType.textContent = type;
+            previewDescription.textContent = description;
+            previewPR.textContent = pr ? `#${pr}` : 'Not specified';
+        } else {
+            previewCard.style.display = 'none';
+        }
+    }
+
+    // Add event listeners for live preview
+    if (contributorSelect) {
+        contributorSelect.addEventListener('change', updatePreview);
+        repoInput.addEventListener('input', updatePreview);
+        typeSelect.addEventListener('change', updatePreview);
+        descriptionInput.addEventListener('input', updatePreview);
+        prInput.addEventListener('input', updatePreview);
+
+        // Form validation
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            const fields = [contributorSelect, repoInput, typeSelect, descriptionInput];
+            let hasErrors = false;
+
+            fields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    hasErrors = true;
+                }
+            });
+
+            if (hasErrors) {
+                e.preventDefault();
+            }
+        });
+
+        // Remove invalid class on input
+        [contributorSelect, repoInput, typeSelect, descriptionInput, prInput].forEach(field => {
+            field.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+            });
+            field.addEventListener('change', function() {
+                this.classList.remove('is-invalid');
+            });
+        });
+    }
+</script>
+{% endblock %}

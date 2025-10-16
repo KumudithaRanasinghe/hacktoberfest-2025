@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}{{ contributor.name }} - Contributors{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Back Button -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <a href="{{ url_for('contributors') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Contributors
+            </a>
+        </div>
+    </div>
+
+    <!-- Contributor Profile Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 text-center mb-3 mb-md-0">
+                            <img src="https://github.com/{{ contributor.github_username }}.png" 
+                                 alt="{{ contributor.name }}" 
+                                 class="rounded-circle img-fluid"
+                                 style="max-width: 120px;"
+                                 onerror="this.src='https://via.placeholder.com/120x120/6c757d/ffffff?text={{ contributor.name[0]|upper }}'">
+                        </div>
+                        <div class="col-md-6">
+                            <h1 class="display-6 mb-2">{{ contributor.name }}</h1>
+                            <p class="text-muted mb-2">
+                                <i class="fab fa-github"></i>
+                                <a href="https://github.com/{{ contributor.github_username }}" 
+                                   target="_blank" class="text-decoration-none">
+                                    @{{ contributor.github_username }}
+                                </a>
+                            </p>
+                            {% if contributor.email %}
+                            <p class="text-muted mb-2">
+                                <i class="fas fa-envelope"></i>
+                                <a href="mailto:{{ contributor.email }}" class="text-decoration-none">
+                                    {{ contributor.email }}
+                                </a>
+                            </p>
+                            {% endif %}
+                            <p class="text-muted">
+                                <i class="fas fa-calendar"></i>
+                                Joined {{ contributor.joined_date.strftime('%B %d, %Y') }}
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="bg-primary text-white rounded p-3">
+                                        <h3 class="mb-0">{{ contributor.get_contribution_count() }}</h3>
+                                        <small>Contributions</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="bg-success text-white rounded p-3">
+                                        <h3 class="mb-0">{{ contributor.contributions|map(attribute='repo_name')|list|unique|list|length }}</h3>
+                                        <small>Repositories</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="bg-info text-white rounded p-3">
+                                        <h3 class="mb-0">{{ contributor.contributions|map(attribute='type')|list|unique|list|length }}</h3>
+                                        <small>Types</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics and Charts -->
+    {% if contributor.contributions %}
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie"></i>
+                        Contribution Types
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="contributionTypesChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line"></i>
+                        Activity Timeline
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="activityTimelineChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Contributions List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list"></i>
+                        All Contributions ({{ contributor.get_contribution_count() }})
+                    </h5>
+                    <a href="{{ url_for('add_contribution') }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus"></i> Add Contribution
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if contributor.contributions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Repository</th>
+                                        <th>Type</th>
+                                        <th>Description</th>
+                                        <th>PR #</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for contribution in contributor.contributions|reverse %}
+                                    <tr>
+                                        <td>
+                                            <code class="bg-light p-1 rounded">
+                                                {{ contribution.repo_name }}
+                                            </code>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ get_type_color(contribution.type) }}">
+                                                {{ contribution.type }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="contribution-description" 
+                                                 title="{{ contribution.description }}">
+                                                {{ contribution.description }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if contribution.pr_number %}
+                                                <a href="https://github.com/{{ contributor.github_username }}/{{ contribution.repo_name }}/pull/{{ contribution.pr_number }}" 
+                                                   target="_blank" class="badge bg-info text-decoration-none">
+                                                    #{{ contribution.pr_number }}
+                                                    <i class="fas fa-external-link-alt fa-xs"></i>
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="text-muted">
+                                                {{ contribution.date[:10] }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-secondary btn-sm" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#contributionModal"
+                                                        data-contribution="{{ contribution|tojson }}">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-code fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No contributions yet!</h5>
+                            <p class="text-muted">This contributor hasn't made any contributions yet.</p>
+                            <a href="{{ url_for('add_contribution') }}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Add First Contribution
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contribution Detail Modal -->
+<div class="modal fade" id="contributionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Contribution Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="contributionDetails"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    {% if contributor.contributions %}
+    // Prepare data for charts
+    const contributions = {{ contributor.contributions|tojson }};
+    
+    // Contribution Types Chart
+    const typeCount = {};
+    contributions.forEach(c => {
+        typeCount[c.type] = (typeCount[c.type] || 0) + 1;
+    });
+    
+    const typeCtx = document.getElementById('contributionTypesChart').getContext('2d');
+    new Chart(typeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(typeCount),
+            datasets: [{
+                data: Object.values(typeCount),
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Activity Timeline Chart
+    const monthlyData = {};
+    contributions.forEach(c => {
+        const month = c.date.substring(0, 7); // YYYY-MM
+        monthlyData[month] = (monthlyData[month] || 0) + 1;
+    });
+    
+    const sortedMonths = Object.keys(monthlyData).sort();
+    
+    const timelineCtx = document.getElementById('activityTimelineChart').getContext('2d');
+    new Chart(timelineCtx, {
+        type: 'line',
+        data: {
+            labels: sortedMonths,
+            datasets: [{
+                label: 'Contributions',
+                data: sortedMonths.map(month => monthlyData[month]),
+                borderColor: '#36A2EB',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+    {% endif %}
+
+    // Modal functionality
+    const contributionModal = document.getElementById('contributionModal');
+    contributionModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const contribution = JSON.parse(button.getAttribute('data-contribution'));
+        
+        const modalBody = document.getElementById('contributionDetails');
+        modalBody.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Repository:</strong><br>
+                    <code>${contribution.repo_name}</code>
+                </div>
+                <div class="col-md-6">
+                    <strong>Type:</strong><br>
+                    <span class="badge bg-primary">${contribution.type}</span>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-12">
+                    <strong>Description:</strong><br>
+                    <p class="mt-2">${contribution.description}</p>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Pull Request:</strong><br>
+                    ${contribution.pr_number ? `#${contribution.pr_number}` : 'N/A'}
+                </div>
+                <div class="col-md-6">
+                    <strong>Date:</strong><br>
+                    ${new Date(contribution.date).toLocaleDateString()}
+                </div>
+            </div>
+        `;
+    });
+</script>
+{% endblock %}

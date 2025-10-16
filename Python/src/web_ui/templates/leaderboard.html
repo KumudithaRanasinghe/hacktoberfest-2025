@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Leaderboard - Hacktoberfest 2025{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h1 class="display-4">
+                <i class="fas fa-trophy text-warning"></i>
+                Leaderboard
+            </h1>
+            <p class="lead text-muted">
+                Celebrating our top contributors in Hacktoberfest 2025!
+            </p>
+        </div>
+    </div>
+
+    <!-- Top 3 Contributors Podium -->
+    {% if leaderboard|length >= 3 %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="d-flex justify-content-center align-items-end" style="height: 300px;">
+                <!-- 2nd Place -->
+                <div class="text-center me-3" style="margin-bottom: 40px;">
+                    <div class="card border-0 shadow-sm" style="width: 150px;">
+                        <div class="card-body text-center p-3">
+                            <div class="position-relative">
+                                <img src="https://github.com/{{ leaderboard[1].github_username }}.png" 
+                                     alt="{{ leaderboard[1].name }}" 
+                                     class="rounded-circle mb-2" 
+                                     width="60" height="60"
+                                     onerror="this.src='https://via.placeholder.com/60x60/6c757d/ffffff?text={{ leaderboard[1].name[0]|upper }}'">
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-secondary">
+                                    2
+                                </span>
+                            </div>
+                            <h6 class="card-title mb-1">{{ leaderboard[1].name }}</h6>
+                            <small class="text-muted">@{{ leaderboard[1].github_username }}</small>
+                            <div class="mt-2">
+                                <span class="badge bg-secondary fs-6">{{ leaderboard[1].contribution_count }} contributions</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1st Place -->
+                <div class="text-center mx-3">
+                    <div class="card border-warning shadow" style="width: 180px;">
+                        <div class="card-body text-center p-3">
+                            <div class="position-relative">
+                                <img src="https://github.com/{{ leaderboard[0].github_username }}.png" 
+                                     alt="{{ leaderboard[0].name }}" 
+                                     class="rounded-circle mb-2" 
+                                     width="80" height="80"
+                                     onerror="this.src='https://via.placeholder.com/80x80/6c757d/ffffff?text={{ leaderboard[0].name[0]|upper }}'">
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">
+                                    <i class="fas fa-crown"></i>
+                                </span>
+                            </div>
+                            <h5 class="card-title mb-1 text-warning">{{ leaderboard[0].name }}</h5>
+                            <small class="text-muted">@{{ leaderboard[0].github_username }}</small>
+                            <div class="mt-2">
+                                <span class="badge bg-warning text-dark fs-6">{{ leaderboard[0].contribution_count }} contributions</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3rd Place -->
+                <div class="text-center ms-3" style="margin-bottom: 80px;">
+                    <div class="card border-0 shadow-sm" style="width: 140px;">
+                        <div class="card-body text-center p-3">
+                            <div class="position-relative">
+                                <img src="https://github.com/{{ leaderboard[2].github_username }}.png" 
+                                     alt="{{ leaderboard[2].name }}" 
+                                     class="rounded-circle mb-2" 
+                                     width="50" height="50"
+                                     onerror="this.src='https://via.placeholder.com/50x50/6c757d/ffffff?text={{ leaderboard[2].name[0]|upper }}'">
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning">
+                                    3
+                                </span>
+                            </div>
+                            <h6 class="card-title mb-1">{{ leaderboard[2].name }}</h6>
+                            <small class="text-muted">@{{ leaderboard[2].github_username }}</small>
+                            <div class="mt-2">
+                                <span class="badge bg-warning fs-6">{{ leaderboard[2].contribution_count }} contributions</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Full Leaderboard Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list-ol"></i>
+                        Complete Rankings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if leaderboard %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th width="60">Rank</th>
+                                        <th>Contributor</th>
+                                        <th>Contributions</th>
+                                        <th>Repositories</th>
+                                        <th>Average per Repo</th>
+                                        <th>Latest Activity</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for contributor in leaderboard %}
+                                    <tr class="{% if loop.index <= 3 %}table-warning{% endif %}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if loop.index == 1 %}
+                                                    <span class="badge bg-warning text-dark fs-6">
+                                                        <i class="fas fa-crown"></i> {{ loop.index }}
+                                                    </span>
+                                                {% elif loop.index <= 3 %}
+                                                    <span class="badge bg-secondary fs-6">{{ loop.index }}</span>
+                                                {% else %}
+                                                    <span class="text-muted fs-6">{{ loop.index }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="https://github.com/{{ contributor.github_username }}.png" 
+                                                     alt="{{ contributor.name }}" 
+                                                     class="rounded-circle me-3" 
+                                                     width="40" height="40"
+                                                     onerror="this.src='https://via.placeholder.com/40x40/6c757d/ffffff?text={{ contributor.name[0]|upper }}'">
+                                                <div>
+                                                    <div class="fw-bold">{{ contributor.name }}</div>
+                                                    <small class="text-muted">
+                                                        <i class="fab fa-github"></i>
+                                                        <a href="https://github.com/{{ contributor.github_username }}" 
+                                                           target="_blank" class="text-decoration-none">
+                                                            @{{ contributor.github_username }}
+                                                        </a>
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary fs-6">
+                                                {{ contributor.contribution_count }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success">
+                                                {{ contributor.unique_repositories }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="text-muted">
+                                                {{ "%.1f"|format(contributor.contribution_count / contributor.unique_repositories if contributor.unique_repositories > 0 else 0) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {% if contributor.latest_contribution %}
+                                                    {{ contributor.latest_contribution[:10] }}
+                                                {% else %}
+                                                    No contributions yet
+                                                {% endif %}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('contributor_detail', username=contributor.github_username) }}" 
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Leaderboard Statistics -->
+                        <div class="row mt-4">
+                            <div class="col-md-3">
+                                <div class="card bg-primary text-white text-center">
+                                    <div class="card-body">
+                                        <h4>{{ leaderboard|length }}</h4>
+                                        <small>Total Contributors</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-success text-white text-center">
+                                    <div class="card-body">
+                                        <h4>{{ leaderboard|sum(attribute='contribution_count') }}</h4>
+                                        <small>Total Contributions</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-info text-white text-center">
+                                    <div class="card-body">
+                                        <h4>{{ "%.1f"|format((leaderboard|sum(attribute='contribution_count') / leaderboard|length) if leaderboard|length > 0 else 0) }}</h4>
+                                        <small>Average per Contributor</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-warning text-dark text-center">
+                                    <div class="card-body">
+                                        <h4>{{ leaderboard[0].contribution_count if leaderboard|length > 0 else 0 }}</h4>
+                                        <small>Highest Contribution Count</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-trophy fa-3x text-muted mb-3"></i>
+                            <h4 class="text-muted">No contributors yet!</h4>
+                            <p class="text-muted">The leaderboard will appear once contributors start making contributions.</p>
+                            <a href="{{ url_for('add_contributor') }}" class="btn btn-primary me-2">
+                                <i class="fas fa-user-plus"></i> Add Contributor
+                            </a>
+                            <a href="{{ url_for('add_contribution') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-code"></i> Add Contribution
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Add some animation to the leaderboard
+    document.addEventListener('DOMContentLoaded', function() {
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach((row, index) => {
+            row.style.opacity = '0';
+            row.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                row.style.transition = 'all 0.3s ease';
+                row.style.opacity = '1';
+                row.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+</script>
+{% endblock %}

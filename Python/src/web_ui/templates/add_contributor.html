@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}Add Contributor - Hacktoberfest 2025{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Back Button -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <a href="{{ url_for('contributors') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Contributors
+            </a>
+        </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="text-center">
+                <h1 class="display-5">
+                    <i class="fas fa-user-plus"></i>
+                    Add New Contributor
+                </h1>
+                <p class="text-muted">
+                    Welcome a new contributor to the Hacktoberfest 2025 project!
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Name Field -->
+                        <div class="mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control form-control-lg" + (" is-invalid" if form.name.errors else ""), 
+                                         placeholder="Enter the contributor's full name") }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i>
+                                This will be displayed publicly on the leaderboard and contributor pages.
+                            </div>
+                        </div>
+
+                        <!-- GitHub Username Field -->
+                        <div class="mb-3">
+                            {{ form.github_username.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fab fa-github"></i>
+                                </span>
+                                {{ form.github_username(class="form-control form-control-lg" + (" is-invalid" if form.github_username.errors else ""), 
+                                                        placeholder="github_username") }}
+                                {% if form.github_username.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.github_username.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i>
+                                Enter the GitHub username without the @ symbol. This will be used to link to their GitHub profile.
+                            </div>
+                        </div>
+
+                        <!-- Email Field -->
+                        <div class="mb-4">
+                            {{ form.email.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                                {{ form.email(class="form-control form-control-lg" + (" is-invalid" if form.email.errors else ""), 
+                                              placeholder="contributor@example.com") }}
+                                {% if form.email.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.email.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i>
+                                Email is optional but helps with communication and notifications.
+                            </div>
+                        </div>
+
+                        <!-- Preview Section -->
+                        <div class="card bg-light mb-4" id="previewCard" style="display: none;">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-eye"></i>
+                                    Preview
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <img id="previewAvatar" src="" alt="Avatar" class="rounded-circle me-3" width="50" height="50">
+                                    <div>
+                                        <h6 class="mb-1" id="previewName">-</h6>
+                                        <small class="text-muted">
+                                            <i class="fab fa-github"></i>
+                                            @<span id="previewUsername">-</span>
+                                        </small>
+                                        <br>
+                                        <small class="text-muted" id="previewEmail" style="display: none;">
+                                            <i class="fas fa-envelope"></i>
+                                            <span id="previewEmailText">-</span>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-primary btn-lg") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tips Card -->
+            <div class="card mt-4 border-info">
+                <div class="card-body">
+                    <h6 class="card-title text-info">
+                        <i class="fas fa-lightbulb"></i>
+                        Tips for Adding Contributors
+                    </h6>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            Make sure the GitHub username is correct to display the contributor's avatar
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            Use the contributor's real name for better recognition
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            Email is optional but helps with project communication
+                        </li>
+                        <li>
+                            <i class="fas fa-check text-success"></i>
+                            After adding, you can immediately start tracking their contributions
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Live preview functionality
+    const nameInput = document.getElementById('name');
+    const usernameInput = document.getElementById('github_username');
+    const emailInput = document.getElementById('email');
+    const previewCard = document.getElementById('previewCard');
+    const previewName = document.getElementById('previewName');
+    const previewUsername = document.getElementById('previewUsername');
+    const previewEmail = document.getElementById('previewEmail');
+    const previewEmailText = document.getElementById('previewEmailText');
+    const previewAvatar = document.getElementById('previewAvatar');
+
+    function updatePreview() {
+        const name = nameInput.value.trim();
+        const username = usernameInput.value.trim();
+        const email = emailInput.value.trim();
+
+        if (name || username) {
+            previewCard.style.display = 'block';
+            previewName.textContent = name || 'Unknown Name';
+            previewUsername.textContent = username || 'unknown';
+            
+            if (username) {
+                previewAvatar.src = `https://github.com/${username}.png`;
+                previewAvatar.onerror = function() {
+                    this.src = `https://via.placeholder.com/50x50/6c757d/ffffff?text=${(name || 'U')[0].toUpperCase()}`;
+                };
+            } else {
+                previewAvatar.src = `https://via.placeholder.com/50x50/6c757d/ffffff?text=${(name || 'U')[0].toUpperCase()}`;
+            }
+
+            if (email) {
+                previewEmail.style.display = 'block';
+                previewEmailText.textContent = email;
+            } else {
+                previewEmail.style.display = 'none';
+            }
+        } else {
+            previewCard.style.display = 'none';
+        }
+    }
+
+    // Add event listeners
+    nameInput.addEventListener('input', updatePreview);
+    usernameInput.addEventListener('input', updatePreview);
+    emailInput.addEventListener('input', updatePreview);
+
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const name = nameInput.value.trim();
+        const username = usernameInput.value.trim();
+
+        if (!name || !username) {
+            e.preventDefault();
+            
+            if (!name) {
+                nameInput.classList.add('is-invalid');
+            }
+            if (!username) {
+                usernameInput.classList.add('is-invalid');
+            }
+        }
+    });
+
+    // Remove invalid class on input
+    [nameInput, usernameInput, emailInput].forEach(input => {
+        input.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+        });
+    });
+</script>
+{% endblock %}
