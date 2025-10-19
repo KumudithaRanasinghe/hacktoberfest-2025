@@ -1,0 +1,113 @@
+{
+  "project_name": "Hacktoberfest 2025",
+  "created_date": "2025-10-19T20:17:28.502449",
+  "contributors": {
+    "alice": {
+      "name": "Alice Johnson",
+      "github_username": "alice",
+      "email": "alice@example.com",
+      "joined_date": "2025-10-19T20:17:28.502550",
+      "contributions": [
+        {
+          "repo_name": "repo-a",
+          "type": "bug-fix",
+          "description": "Fix 0",
+          "pr_number": 100,
+          "date": "2025-10-19T20:17:28.538942"
+        },
+        {
+          "repo_name": "repo-a",
+          "type": "feature",
+          "description": "Fix 1",
+          "pr_number": 101,
+          "date": "2025-10-19T20:17:28.542557"
+        },
+        {
+          "repo_name": "repo-a",
+          "type": "bug-fix",
+          "description": "Fix 2",
+          "pr_number": 102,
+          "date": "2025-10-19T20:17:28.546689"
+        },
+        {
+          "repo_name": "repo-a",
+          "type": "feature",
+          "description": "Fix 3",
+          "pr_number": 103,
+          "date": "2025-10-19T20:17:28.549451"
+        },
+        {
+          "repo_name": "repo-a",
+          "type": "bug-fix",
+          "description": "Fix 4",
+          "pr_number": 104,
+          "date": "2025-10-19T20:17:28.552680"
+        }
+      ],
+      "contribution_count": 5,
+      "hacktoberfest_complete": true
+    },
+    "bob": {
+      "name": "Bob Smith",
+      "github_username": "bob",
+      "email": "bob@example.com",
+      "joined_date": "2025-10-19T20:17:28.533087",
+      "contributions": [
+        {
+          "repo_name": "repo-b",
+          "type": "documentation",
+          "description": "Doc 0",
+          "pr_number": 200,
+          "date": "2025-10-19T20:17:28.555449"
+        },
+        {
+          "repo_name": "repo-b",
+          "type": "documentation",
+          "description": "Doc 1",
+          "pr_number": 201,
+          "date": "2025-10-19T20:17:28.558465"
+        },
+        {
+          "repo_name": "repo-b",
+          "type": "documentation",
+          "description": "Doc 2",
+          "pr_number": 202,
+          "date": "2025-10-19T20:17:28.561651"
+        },
+        {
+          "repo_name": "repo-b",
+          "type": "documentation",
+          "description": "Doc 3",
+          "pr_number": 203,
+          "date": "2025-10-19T20:17:28.564758"
+        }
+      ],
+      "contribution_count": 4,
+      "hacktoberfest_complete": true
+    },
+    "carol": {
+      "name": "Carol White",
+      "github_username": "carol",
+      "email": "carol@example.com",
+      "joined_date": "2025-10-19T20:17:28.535643",
+      "contributions": [
+        {
+          "repo_name": "repo-c",
+          "type": "feature",
+          "description": "Feature 0",
+          "pr_number": 300,
+          "date": "2025-10-19T20:17:28.567379"
+        },
+        {
+          "repo_name": "repo-c",
+          "type": "feature",
+          "description": "Feature 1",
+          "pr_number": 301,
+          "date": "2025-10-19T20:17:28.570366"
+        }
+      ],
+      "contribution_count": 2,
+      "hacktoberfest_complete": false
+    }
+  }
+}

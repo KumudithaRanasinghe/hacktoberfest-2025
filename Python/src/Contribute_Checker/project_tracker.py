@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 from .contributor import Contributor
 from .email_notifier import EmailNotifier
+from .performance_metrics import PerformanceMetrics
 
 
 class ProjectTracker:
@@ -41,6 +42,9 @@ class ProjectTracker:
                 sender_email=sender_email,
                 sender_password=sender_password
             )
+        
+        # Initialize performance metrics analyzer
+        self.metrics_analyzer = PerformanceMetrics()
         
         self.load_data()
     
@@ -359,6 +363,134 @@ class ProjectTracker:
         except Exception as e:
             print(f"❌ Failed to enable email notifications: {e}")
             return False
+    
+    # Performance Metrics Methods
+    
+    def get_contributor_metrics(self, github_username: str) -> Dict[str, Any]:
+        """
+        Get performance metrics for a specific contributor.
+        
+        Args:
+            github_username (str): GitHub username
+            
+        Returns:
+            Dict[str, Any]: Contributor metrics
+        """
+        contributor = self.get_contributor(github_username)
+        if not contributor:
+            return {}
+        
+        return self.metrics_analyzer.calculate_contributor_metrics(contributor)
+    
+    def get_project_performance_metrics(self) -> Dict[str, Any]:
+        """
+        Get overall project performance metrics.
+        
+        Returns:
+            Dict[str, Any]: Project-wide metrics
+        """
+        return self.metrics_analyzer.calculate_project_metrics(self.get_all_contributors())
+    
+    def get_engagement_score(self, github_username: str) -> float:
+        """
+        Get engagement score for a contributor.
+        
+        Args:
+            github_username (str): GitHub username
+            
+        Returns:
+            float: Engagement score (0-100)
+        """
+        contributor = self.get_contributor(github_username)
+        if not contributor:
+            return 0.0
+        
+        return self.metrics_analyzer.get_engagement_score(contributor)
+    
+    def get_contributors_ranking(self) -> List[Dict[str, Any]]:
+        """
+        Get contributors ranked by engagement score.
+        
+        Returns:
+            List[Dict[str, Any]]: Ranked contributors
+        """
+        return self.metrics_analyzer.get_contributors_ranking(self.get_all_contributors())
+    
+    def get_time_series_metrics(self) -> Dict[str, Any]:
+        """
+        Get time-series metrics for contribution trends.
+        
+        Returns:
+            Dict[str, Any]: Time-series data
+        """
+        return self.metrics_analyzer.calculate_time_series_metrics(self.get_all_contributors())
+    
+    def get_performance_summary(self) -> Dict[str, Any]:
+        """
+        Get comprehensive performance summary.
+        
+        Returns:
+            Dict[str, Any]: Complete performance summary
+        """
+        return self.metrics_analyzer.get_performance_summary(self.get_all_contributors())
+    
+    def get_performance_insights(self) -> Dict[str, Any]:
+        """
+        Get performance insights and recommendations.
+        
+        Returns:
+            Dict[str, Any]: Insights and recommendations
+        """
+        return self.metrics_analyzer.get_performance_insights(self.get_all_contributors())
+    
+    def print_performance_report(self) -> None:
+        """Print a detailed performance report."""
+        metrics = self.get_project_performance_metrics()
+        insights = self.get_performance_insights()
+        
+        print(f"\n📊 {self.project_name} - Performance Report 📊")
+        print("=" * 70)
+        print(f"Total Contributors: {metrics['total_contributors']}")
+        print(f"Total Contributions: {metrics['total_contributions']}")
+        print(f"Average per Contributor: {metrics['average_contributions_per_contributor']:.2f}")
+        print(f"Median per Contributor: {metrics['median_contributions_per_contributor']:.2f}")
+        print(f"Completion Rate: {metrics['hacktoberfest_completion_rate']:.1f}%")
+        
+        print("\n🏆 Top 5 Contributors:")
+        for i, contrib in enumerate(metrics['top_contributors'][:5], 1):
+            print(f"  {i}. {contrib['name']} (@{contrib['username']}) - {contrib['contributions']} contributions")
+        
+        print("\n💡 Key Insights:")
+        for highlight in insights["highlights"]:
+            print(f"  ✨ {highlight}")
+        
+        if insights["concerns"]:
+            print("\n⚠️  Concerns:")
+            for concern in insights["concerns"]:
+                print(f"  {concern}")
+        
+        if insights["recommendations"]:
+            print("\n💡 Recommendations:")
+            for rec in insights["recommendations"]:
+                print(f"  • {rec}")
+        
+        print("\n" + "=" * 70)
+    
+    def print_engagement_leaderboard(self) -> None:
+        """Print engagement score leaderboard."""
+        rankings = self.get_contributors_ranking()
+        
+        print(f"\n⭐ Engagement Score Leaderboard ⭐")
+        print("=" * 70)
+        print(f"{'Rank':<6} {'Name':<20} {'Username':<15} {'Score':<8} {'Status':<12}")
+        print("-" * 70)
+        
+        for ranking in rankings[:20]:  # Top 20
+            status = "✅ Complete" if ranking['hacktoberfest_complete'] else f"📝 {ranking['contributions']}/4"
+            print(f"{ranking['rank']:<6} {ranking['name'][:19]:<20} {ranking['username']:<15} "
+                  f"{ranking['engagement_score']:<8.1f} {status:<12}")
+        
+        print("=" * 70)
     
     def __str__(self) -> str:
         """String representation of the project tracker."""

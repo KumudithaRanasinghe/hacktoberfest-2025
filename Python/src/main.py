@@ -122,6 +122,45 @@ Examples:
         "--sender-password",
         metavar="PASSWORD",
         help="Email password (or use environment variable SENDER_PASSWORD)"
+    )
+    
+    # Performance metrics options
+    parser.add_argument(
+        "--performance-report",
+        action="store_true",
+        help="Show detailed performance report"
+    )
+    
+    parser.add_argument(
+        "--engagement-leaderboard",
+        action="store_true",
+        help="Show engagement score leaderboard"
+    )
+    
+    parser.add_argument(
+        "--metrics",
+        metavar="USERNAME",
+        help="Show detailed metrics for a specific contributor"
+    )
+    
+    parser.add_argument(
+        "--project-metrics",
+        action="store_true",
+        help="Show project-wide performance metrics"
+    )
+    
+    parser.add_argument(
+        "--insights",
+        action="store_true",
+        help="Show performance insights and recommendations"
+    )
+    
+    parser.add_argument(
+        "--export-metrics",
+        metavar="FILENAME",
+        help="Export performance metrics to JSON file"
+    )
+    
     # Web UI mode
     parser.add_argument(
         "--web",
@@ -247,6 +286,105 @@ Examples:
                 print("-" * 70)
         else:
             print("No notification history found.")
+    
+    # Performance metrics commands
+    elif args.performance_report:
+        tracker.print_performance_report()
+    
+    elif args.engagement_leaderboard:
+        tracker.print_engagement_leaderboard()
+    
+    elif args.metrics:
+        metrics = tracker.get_contributor_metrics(args.metrics)
+        if metrics:
+            print(f"\n📊 Performance Metrics for {metrics['name']} 📊")
+            print("=" * 70)
+            print(f"Username: @{metrics['username']}")
+            print(f"Total Contributions: {metrics['total_contributions']}")
+            print(f"Joined: {metrics['joined_date'][:10]}")
+            print(f"Days Active: {metrics['days_active']}")
+            print(f"Hacktoberfest Complete: {'✅ Yes' if metrics['hacktoberfest_complete'] else '❌ No'}")
+            print(f"Contribution Streak: {metrics['contribution_streak']} days")
+            print(f"Avg Days Between Contributions: {metrics['average_days_between_contributions']:.1f}")
+            print(f"Most Active Day: {metrics['most_active_day'] or 'N/A'}")
+            
+            if metrics['contributions_by_type']:
+                print("\nContributions by Type:")
+                for contrib_type, count in metrics['contributions_by_type'].items():
+                    print(f"  • {contrib_type}: {count}")
+            
+            if metrics['contributions_by_repo']:
+                print("\nContributions by Repository:")
+                for repo, count in metrics['contributions_by_repo'].items():
+                    print(f"  • {repo}: {count}")
+            
+            engagement_score = tracker.get_engagement_score(args.metrics)
+            print(f"\nEngagement Score: {engagement_score:.1f}/100")
+        else:
+            print(f"❌ Contributor '{args.metrics}' not found.")
+    
+    elif args.project_metrics:
+        metrics = tracker.get_project_performance_metrics()
+        print("\n📊 Project Performance Metrics 📊")
+        print("=" * 70)
+        print(f"Total Contributors: {metrics['total_contributors']}")
+        print(f"Total Contributions: {metrics['total_contributions']}")
+        print(f"Average per Contributor: {metrics['average_contributions_per_contributor']:.2f}")
+        print(f"Median per Contributor: {metrics['median_contributions_per_contributor']:.2f}")
+        print(f"Std Dev: {metrics['contribution_std_dev']:.2f}")
+        print(f"Min Contributions: {metrics['min_contributions']}")
+        print(f"Max Contributions: {metrics['max_contributions']}")
+        print(f"Completion Rate: {metrics['hacktoberfest_completion_rate']:.1f}%")
+        
+        if metrics['top_repositories']:
+            print("\nTop Repositories:")
+            for repo, count in sorted(metrics['top_repositories'].items(), 
+                                     key=lambda x: x[1], reverse=True)[:5]:
+                print(f"  • {repo}: {count} contributions")
+        
+        if metrics['contribution_types_summary']:
+            print("\nContribution Types:")
+            for contrib_type, count in metrics['contribution_types_summary'].items():
+                print(f"  • {contrib_type}: {count}")
+        
+        print("\nDistribution:")
+        for bucket, count in metrics['contribution_distribution'].items():
+            bar = "█" * (count // 5) if count > 0 else ""
+            print(f"  {bucket:>6} contributions: {bar} ({count})")
+    
+    elif args.insights:
+        insights = tracker.get_performance_insights()
+        print("\n💡 Performance Insights & Recommendations 💡")
+        print("=" * 70)
+        
+        if insights["highlights"]:
+            print("\n✨ Highlights:")
+            for highlight in insights["highlights"]:
+                print(f"  {highlight}")
+        
+        if insights["concerns"]:
+            print("\n⚠️  Concerns:")
+            for concern in insights["concerns"]:
+                print(f"  {concern}")
+        
+        if insights["recommendations"]:
+            print("\n💡 Recommendations:")
+            for i, rec in enumerate(insights["recommendations"], 1):
+                print(f"  {i}. {rec}")
+        
+        print("\n📈 Statistics:")
+        for key, value in insights["statistics"].items():
+            print(f"  • {key}: {value}")
+    
+    elif args.export_metrics:
+        try:
+            import json
+            summary = tracker.get_performance_summary()
+            with open(args.export_metrics, 'w') as f:
+                json.dump(summary, f, indent=2)
+            print(f"✅ Metrics exported to {args.export_metrics}")
+        except Exception as e:
+            print(f"❌ Error exporting metrics: {e}")
     
     else:
         # Default behavior - show welcome message and basic stats
