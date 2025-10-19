@@ -17,8 +17,7 @@ colorama>=0.4.6  # For colored console output
 rich>=13.0.0     # For beautiful terminal output
 click>=8.0.0     # Alternative CLI framework
 
-# Web UI dependencies
-flask>=2.3.0     # Web framework
-flask-wtf>=1.1.0 # Forms handling
-wtforms>=3.0.0   # Form validation
-flask-cors>=4.0.0 # CORS support
+# Email notification dependencies
+PyJWT>=2.8.0     # For JWT token generation and validation
+python-dotenv>=1.0.0  # For environment variable management
+smtplib  # Standard library for email sending

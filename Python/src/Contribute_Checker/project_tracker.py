@@ -7,23 +7,41 @@ import os
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 from .contributor import Contributor
+from .email_notifier import EmailNotifier
 
 
 class ProjectTracker:
     """Manages the overall Hacktoberfest project and tracks all contributors."""
     
-    def __init__(self, project_name: str = "Hacktoberfest 2025", data_file: str = "contributors.json"):
+    def __init__(self, project_name: str = "Hacktoberfest 2025", data_file: str = "contributors.json",
+                 enable_notifications: bool = False, smtp_server: str = None, 
+                 sender_email: str = None, sender_password: str = None):
         """
         Initialize the project tracker.
         
         Args:
             project_name (str): Name of the project
             data_file (str): File to store contributor data
+            enable_notifications (bool): Enable email notifications
+            smtp_server (str, optional): SMTP server address
+            sender_email (str, optional): Email to send from
+            sender_password (str, optional): Email password
         """
         self.project_name = project_name
         self.data_file = data_file
         self.contributors: Dict[str, Contributor] = {}
         self.created_date = datetime.now()
+        self.enable_notifications = enable_notifications
+        
+        # Initialize email notifier if enabled
+        self.notifier: Optional[EmailNotifier] = None
+        if enable_notifications:
+            self.notifier = EmailNotifier(
+                smtp_server=smtp_server,
+                sender_email=sender_email,
+                sender_password=sender_password
+            )
+        
         self.load_data()
     
     def add_contributor(self, name: str, github_username: str, email: str = "") -> Contributor:
@@ -43,6 +61,11 @@ class ProjectTracker:
         
         contributor = Contributor(name, github_username, email)
         self.contributors[github_username] = contributor
+        
+        # Send welcome email if enabled
+        if self.notifier and email:
+            self.notifier.send_welcome_email(email, name, github_username)
+        
         self.save_data()
         return contributor
     
@@ -78,6 +101,21 @@ class ProjectTracker:
             return False
         
         contributor.add_contribution(repo_name, contribution_type, description, pr_number)
+        
+        # Send milestone notification if enabled
+        if self.notifier and contributor.email:
+            contribution_count = contributor.get_contribution_count()
+            is_complete = contributor.is_hacktoberfest_complete()
+            
+            # Notify on every contribution or on completion
+            if contribution_count % 1 == 0:  # Notify on each contribution
+                self.notifier.send_milestone_notification(
+                    contributor.email,
+                    github_username,
+                    contribution_count,
+                    is_complete
+                )
+        
         self.save_data()
         return True
     
@@ -229,6 +267,98 @@ class ProjectTracker:
         print(f"Completed Hacktoberfest: {stats['completed_hacktoberfest']}")
         print(f"Completion Rate: {stats['completion_rate']}")
         print(f"Project Started: {stats['created_date'][:10]}")
+    
+    def send_notification_to_contributor(self, github_username: str) -> bool:
+        """
+        Manually send a notification to a specific contributor.
+        
+        Args:
+            github_username (str): GitHub username of the contributor
+            
+        Returns:
+            bool: True if notification sent successfully
+        """
+        if not self.notifier:
+            print("❌ Email notifications are not enabled.")
+            return False
+        
+        contributor = self.get_contributor(github_username)
+        if not contributor:
+            print(f"❌ Contributor {github_username} not found.")
+            return False
+        
+        if not contributor.email:
+            print(f"❌ No email address for contributor {github_username}.")
+            return False
+        
+        return self.notifier.send_milestone_notification(
+            contributor.email,
+            github_username,
+            contributor.get_contribution_count(),
+            contributor.is_hacktoberfest_complete()
+        )
+    
+    def send_notifications_to_all_contributors(self) -> Dict[str, bool]:
+        """
+        Send notifications to all contributors.
+        
+        Returns:
+            Dict[str, bool]: Dictionary of (username, success) pairs
+        """
+        if not self.notifier:
+            print("❌ Email notifications are not enabled.")
+            return {}
+        
+        results = {}
+        for contributor in self.get_all_contributors():
+            if contributor.email:
+                results[contributor.github_username] = self.notifier.send_milestone_notification(
+                    contributor.email,
+                    contributor.github_username,
+                    contributor.get_contribution_count(),
+                    contributor.is_hacktoberfest_complete()
+                )
+        
+        return results
+    
+    def get_notification_history(self) -> List[Dict]:
+        """
+        Get the history of sent notifications.
+        
+        Returns:
+            List[Dict]: List of notification records
+        """
+        if not self.notifier:
+            return []
+        
+        return self.notifier.get_notification_history()
+    
+    def enable_email_notifications(self, smtp_server: str = None,
+                                  sender_email: str = None,
+                                  sender_password: str = None) -> bool:
+        """
+        Enable email notifications for the project.
+        
+        Args:
+            smtp_server (str, optional): SMTP server address
+            sender_email (str, optional): Email to send from
+            sender_password (str, optional): Email password
+            
+        Returns:
+            bool: True if notifier initialized successfully
+        """
+        try:
+            self.notifier = EmailNotifier(
+                smtp_server=smtp_server,
+                sender_email=sender_email,
+                sender_password=sender_password
+            )
+            self.enable_notifications = True
+            print("✅ Email notifications enabled successfully!")
+            return True
+        except Exception as e:
+            print(f"❌ Failed to enable email notifications: {e}")
+            return False
     
     def __str__(self) -> str:
         """String representation of the project tracker."""

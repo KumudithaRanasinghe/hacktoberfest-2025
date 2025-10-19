@@ -9,5 +9,6 @@ __email__ = "contributors@hacktoberfest.com"
 
 from .contributor import Contributor
 from .project_tracker import ProjectTracker
+from .email_notifier import EmailNotifier
 
-__all__ = ["Contributor", "ProjectTracker"]
+__all__ = ["Contributor", "ProjectTracker", "EmailNotifier"]

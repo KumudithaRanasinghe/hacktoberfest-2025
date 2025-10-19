@@ -81,6 +81,47 @@ Examples:
         help="Run in interactive mode"
     )
     
+    # Email notification options
+    parser.add_argument(
+        "--enable-notifications",
+        action="store_true",
+        help="Enable email notifications for contributors"
+    )
+    
+    parser.add_argument(
+        "--notify-contributor",
+        metavar="USERNAME",
+        help="Send a notification email to a specific contributor"
+    )
+    
+    parser.add_argument(
+        "--notify-all",
+        action="store_true",
+        help="Send notification emails to all contributors"
+    )
+    
+    parser.add_argument(
+        "--notification-history",
+        action="store_true",
+        help="Show notification history"
+    )
+    
+    parser.add_argument(
+        "--smtp-server",
+        metavar="SERVER",
+        help="SMTP server address (e.g., smtp.gmail.com)"
+    )
+    
+    parser.add_argument(
+        "--sender-email",
+        metavar="EMAIL",
+        help="Email address to send from"
+    )
+    
+    parser.add_argument(
+        "--sender-password",
+        metavar="PASSWORD",
+        help="Email password (or use environment variable SENDER_PASSWORD)"
     # Web UI mode
     parser.add_argument(
         "--web",
@@ -92,6 +133,18 @@ Examples:
     
     # Initialize the project tracker
     tracker = ProjectTracker()
+    
+    # Handle email notification setup
+    if args.enable_notifications:
+        smtp_server = args.smtp_server
+        sender_email = args.sender_email
+        sender_password = args.sender_password
+        
+        if not sender_email:
+            print("❌ Error: --sender-email is required to enable notifications")
+            return
+        
+        tracker.enable_email_notifications(smtp_server, sender_email, sender_password)
     
     # Handle different command line options
     if args.add_contributor:
@@ -165,6 +218,35 @@ Examples:
     
     elif args.interactive:
         interactive_mode(tracker)
+    
+    elif args.notify_contributor:
+        success = tracker.send_notification_to_contributor(args.notify_contributor)
+        if not success:
+            sys.exit(1)
+    
+    elif args.notify_all:
+        results = tracker.send_notifications_to_all_contributors()
+        if results:
+            successful = sum(1 for v in results.values() if v)
+            print(f"\n✅ Sent {successful}/{len(results)} notifications successfully")
+        else:
+            print("❌ No contributors to notify or notifications not enabled")
+    
+    elif args.notification_history:
+        history = tracker.get_notification_history()
+        if history:
+            print("\n📧 Notification History 📧")
+            print("=" * 70)
+            for record in history:
+                print(f"Recipient: {record.get('recipient', 'N/A')}")
+                print(f"Username: {record.get('username', 'N/A')}")
+                print(f"Status: {record.get('status', 'N/A')}")
+                print(f"Timestamp: {record.get('timestamp', 'N/A')}")
+                if 'milestone' in record:
+                    print(f"Milestone: {record['milestone']} contributions")
+                print("-" * 70)
+        else:
+            print("No notification history found.")
     
     else:
         # Default behavior - show welcome message and basic stats
