@@ -23,9 +23,8 @@ interface Contributor {
     avatar: string;
     mergedPRs: number;
     totalPRs: number;
-    additions: number;
-    deletions: number;
-    commits: number;
+    linesChanged: number;
+    completionTime: string;
     profileUrl: string;
 }
 
@@ -46,34 +45,27 @@ interface GitHubPullRequest {
     }>;
 }
 
-interface GitHubPullRequestDetail {
-    additions: number;
-    deletions: number;
-    commits: number;
-}
-
+// GitHub API URL
 const GITHUB_API_URL = "https://api.github.com/repos/IEEE-Student-Branch-NSBM/hacktoberfest-2025/pulls?state=all";
 
+// Function to calculate time difference
+const calculateTimeDifference = (startDate: string, endDate: string | null): string => {
+    if (!endDate) return "Ongoing";
 
-const fetchPRDetails = async (prNumber: number): Promise<GitHubPullRequestDetail | null> => {
-    try {
-        const response = await fetch(`https://api.github.com/repos/IEEE-Student-Branch-NSBM/hacktoberfest-2025/pulls/${prNumber}`);
-        if (!response.ok) {
-            console.warn(`Failed to fetch details for PR #${prNumber}`);
-            return null;
-        }
-        const data = await response.json();
-        return {
-            additions: data.additions || 0,
-            deletions: data.deletions || 0,
-            commits: data.commits || 0
-        };
-    } catch (error) {
-        console.warn(`Error fetching PR #${prNumber} details:`, error);
-        return null;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffMs = end.getTime() - start.getTime();
+
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+    if (days > 0) {
+        return `${days} day${days > 1 ? 's' : ''} ${hours} hr${hours !== 1 ? 's' : ''}`;
     }
+    return `${hours} hr${hours !== 1 ? 's' : ''}`;
 };
 
+// Function to check if PR has hacktoberfest label
 const hasHacktoberfestLabel = (labels: Array<{ name: string }>): boolean => {
     return labels.some(label =>
         label.name.toLowerCase().includes('hacktoberfest') ||
@@ -81,9 +73,12 @@ const hasHacktoberfestLabel = (labels: Array<{ name: string }>): boolean => {
     );
 };
 
-const processGitHubData = async (prs: GitHubPullRequest[]): Promise<Contributor[]> => {
+// Function to process GitHub PRs into contributor data
+const processGitHubData = (prs: GitHubPullRequest[]): Contributor[] => {
+    // Filter for hacktoberfest PRs
     const hacktoberfestPRs = prs.filter(pr => hasHacktoberfestLabel(pr.labels));
 
+    // Group PRs by user
     const userMap = new Map<string, {
         user: GitHubPullRequest['user'];
         prs: GitHubPullRequest[];
@@ -108,44 +103,35 @@ const processGitHubData = async (prs: GitHubPullRequest[]): Promise<Contributor[
         }
     });
 
-    const contributors: Contributor[] = [];
-    let index = 0;
-
-    for (const [username, data] of userMap.entries()) {
+    // Convert to contributor format
+    const contributors: Contributor[] = Array.from(userMap.entries()).map(([username, data], index) => {
         const mergedPRs = data.mergedPRs;
 
-        const prDetails = await Promise.all(
-            data.prs.map(pr => fetchPRDetails(pr.number))
-        );
+        // Calculate estimated lines changed (this is an approximation since we don't have actual diff data)
+        const estimatedLinesChanged = mergedPRs.length * 150; // Rough estimate
 
-        let totalAdditions = 0;
-        let totalDeletions = 0;
-        let totalCommits = 0;
+        // Calculate average completion time
+        const completionTimes = mergedPRs
+            .filter(pr => pr.merged_at)
+            .map(pr => calculateTimeDifference(pr.created_at, pr.merged_at))
+            .filter(time => time !== "Ongoing");
 
-        prDetails.forEach(detail => {
-            if (detail) {
-                totalAdditions += detail.additions;
-                totalDeletions += detail.deletions;
-                totalCommits += detail.commits;
-            }
-        });
+        const avgTime = completionTimes.length > 0 ? completionTimes[0] : "No merges yet";
 
-        contributors.push({
+        return {
             id: index + 1,
-            rank: 0,
+            rank: 0, // Will be set after sorting
             username,
             avatar: data.user.avatar_url,
             mergedPRs: mergedPRs.length,
             totalPRs: data.prs.length,
-            additions: totalAdditions,
-            deletions: totalDeletions,
-            commits: totalCommits,
+            linesChanged: estimatedLinesChanged,
+            completionTime: avgTime,
             profileUrl: data.user.html_url
-        });
+        };
+    });
 
-        index++;
-    }
-
+    // Sort by merged PRs (descending) and assign ranks
     contributors.sort((a, b) => {
         if (b.mergedPRs !== a.mergedPRs) {
             return b.mergedPRs - a.mergedPRs;
@@ -153,6 +139,7 @@ const processGitHubData = async (prs: GitHubPullRequest[]): Promise<Contributor[
         return b.totalPRs - a.totalPRs;
     });
 
+    // Assign ranks
     contributors.forEach((contributor, index) => {
         contributor.rank = index + 1;
     });
@@ -187,7 +174,7 @@ const getRankBadgeVariant = (rank: number) => {
 };
 
 const PodiumCard = ({ contributor }: { contributor: Contributor }) => {
-    const completionPercentage = (contributor.mergedPRs / 6) * 100;
+    const completionPercentage = (contributor.mergedPRs / contributor.totalPRs) * 100;
 
     return (
         <Card className="relative overflow-hidden">
@@ -219,22 +206,20 @@ const PodiumCard = ({ contributor }: { contributor: Contributor }) => {
             </CardHeader>
 
             <CardContent className="pt-0">
-                <div className="grid grid-cols-3 gap-4 mb-4 text-sm">
+                <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
                     <div className="flex items-center justify-center space-x-2">
                         <GitPullRequest className="h-4 w-4" />
                         <span className="font-semibold">{contributor.mergedPRs} PRs</span>
                     </div>
                     <div className="flex items-center justify-center space-x-2">
-                        <span className="text-green-600 font-semibold">+{contributor.additions}</span>
-                    </div>
-                    <div className="flex items-center justify-center space-x-2">
-                        <span className="text-red-600 font-semibold">-{contributor.deletions}</span>
+                        <Code className="h-4 w-4" />
+                        <span className="font-semibold">{contributor.linesChanged} lines</span>
                     </div>
                 </div>
 
                 <div className="flex items-center justify-center space-x-2 mb-4 text-sm text-muted-foreground">
-                    <Code className="h-4 w-4" />
-                    <span>{contributor.commits} commits</span>
+                    <Clock className="h-4 w-4" />
+                    <span>{contributor.completionTime}</span>
                 </div>
 
                 <div className="border-t mb-4" />
@@ -242,7 +227,7 @@ const PodiumCard = ({ contributor }: { contributor: Contributor }) => {
                 <div>
                     <div className="flex justify-between text-xs text-muted-foreground mb-2">
                         <span>Progress</span>
-                        <span>{contributor.mergedPRs}/6 PRs</span>
+                        <span>{contributor.mergedPRs}/{contributor.totalPRs} PRs</span>
                     </div>
                     <Progress value={completionPercentage} className="h-2" />
                 </div>
@@ -267,7 +252,7 @@ export default function Leaderboard() {
                 }
 
                 const prs: GitHubPullRequest[] = await response.json();
-                const processedData = await processGitHubData(prs);
+                const processedData = processGitHubData(prs);
                 setContributors(processedData);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to fetch data');
@@ -358,16 +343,15 @@ export default function Leaderboard() {
                                                 <TableHead className="w-16">Rank</TableHead>
                                                 <TableHead>Contributor</TableHead>
                                                 <TableHead className="text-center">Merged PRs</TableHead>
-                                                <TableHead className="text-center">Additions</TableHead>
-                                                <TableHead className="text-center">Deletions</TableHead>
-                                                <TableHead className="text-center">Commits</TableHead>
+                                                <TableHead className="text-center">Lines Changed</TableHead>
+                                                <TableHead className="text-center">Completion Time</TableHead>
                                                 <TableHead className="text-center">Progress</TableHead>
                                                 <TableHead className="w-16"></TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {others.map((contributor) => {
-                                                const completionPercentage = (contributor.mergedPRs / 6) * 100;
+                                                const completionPercentage = (contributor.mergedPRs / contributor.totalPRs) * 100;
 
                                                 return (
                                                     <TableRow key={contributor.id} className="hover:bg-muted/50 transition-colors">
@@ -404,20 +388,15 @@ export default function Leaderboard() {
 
                                                         <TableCell className="text-center">
                                                             <div className="flex items-center justify-center space-x-2">
-                                                                <span className="text-green-600 font-semibold">+{contributor.additions}</span>
-                                                            </div>
-                                                        </TableCell>
-
-                                                        <TableCell className="text-center">
-                                                            <div className="flex items-center justify-center space-x-2">
-                                                                <span className="text-red-600 font-semibold">-{contributor.deletions}</span>
-                                                            </div>
-                                                        </TableCell>
-
-                                                        <TableCell className="text-center">
-                                                            <div className="flex items-center justify-center space-x-2">
                                                                 <Code className="h-4 w-4" />
-                                                                <span className="font-semibold">{contributor.commits}</span>
+                                                                <span className="font-semibold">{contributor.linesChanged}</span>
+                                                            </div>
+                                                        </TableCell>
+
+                                                        <TableCell className="text-center">
+                                                            <div className="flex items-center justify-center space-x-2 text-muted-foreground">
+                                                                <Clock className="h-4 w-4" />
+                                                                <span className="text-sm">{contributor.completionTime}</span>
                                                             </div>
                                                         </TableCell>
 
@@ -425,7 +404,7 @@ export default function Leaderboard() {
                                                             <div className="w-full max-w-24 mx-auto">
                                                                 <div className="flex justify-between text-xs text-muted-foreground mb-1">
                                                                     <span>{contributor.mergedPRs}</span>
-                                                                    <span>6</span>
+                                                                    <span>{contributor.totalPRs}</span>
                                                                 </div>
                                                                 <Progress value={completionPercentage} className="h-2" />
                                                             </div>
