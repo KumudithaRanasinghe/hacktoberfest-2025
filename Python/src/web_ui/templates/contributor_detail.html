@@ -315,14 +315,14 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
-    {% if contributor.contributions %}
+{% if contributor.contributions %}
+<script type="text/javascript">
     // Prepare data for charts
-    const contributions = {{ contributor.contributions|tojson }};
+    const contributionData = {{ contributor.contributions | tojson() | safe }};
     
     // Contribution Types Chart
     const typeCount = {};
-    contributions.forEach(c => {
+    contributionData.forEach(c => {
         typeCount[c.type] = (typeCount[c.type] || 0) + 1;
     });
     
@@ -351,7 +351,7 @@
 
     // Activity Timeline Chart
     const monthlyData = {};
-    contributions.forEach(c => {
+    contributionData.forEach(c => {
         const month = c.date.substring(0, 7); // YYYY-MM
         monthlyData[month] = (monthlyData[month] || 0) + 1;
     });
@@ -390,9 +390,12 @@
             }
         }
     });
-    {% endif %}
-
-    // Modal functionality
+</script>
+{% endif %}
+    
+    <script type="text/javascript">
+    //<![CDATA[
+        // Modal functionality
     const contributionModal = document.getElementById('contributionModal');
     contributionModal.addEventListener('show.bs.modal', function (event) {
         const button = event.relatedTarget;
@@ -430,5 +433,6 @@
             </div>
         `;
     });
+//]]>
 </script>
 {% endblock %}
