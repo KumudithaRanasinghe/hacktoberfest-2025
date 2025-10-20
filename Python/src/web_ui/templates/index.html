@@ -118,7 +118,7 @@
 
     <!-- Recent Contributions -->
     <div class="row">
-        <div class="col-12">
+        <div class="col-md-8">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
@@ -200,6 +200,92 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Right Sidebar -->
+        <div class="col-md-4">
+            <!-- Git Pull Timing Widget -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fab fa-git-alt text-warning"></i>
+                        Git Pull Tracker
+                    </h6>
+                    <button class="btn btn-sm btn-outline-success" id="runGitPull">
+                        <i class="fas fa-download"></i> Pull
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="git-status" id="gitStatus">
+                        <div class="d-flex align-items-center text-muted">
+                            <i class="fas fa-clock me-2"></i>
+                            <span>Ready to pull</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Pull History -->
+                    <div class="pull-history mt-3">
+                        <h6 class="text-muted mb-2">Recent Pulls</h6>
+                        <div class="pull-history-list" id="pullHistoryList">
+                            <!-- Pull history items will be added here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div class="git-stats mt-3 pt-3 border-top">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="fw-bold text-success" id="avgPullTime">--</div>
+                                <small class="text-muted">Avg Time</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="fw-bold text-primary" id="totalPulls">0</div>
+                                <small class="text-muted">Total Pulls</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="fw-bold text-info" id="lastPullTime">--</div>
+                                <small class="text-muted">Last Pull</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Search Widget -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-search text-primary"></i>
+                        Quick Search
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="input-group search-box">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" class="form-control" id="quickSearch" 
+                               placeholder="Search contributors..."
+                               autocomplete="off">
+                    </div>
+                    <div class="quick-search-results mt-3" id="quickSearchResults" style="display: none;">
+                        <div class="list-group list-group-flush">
+                            <!-- Results will be populated here -->
+                        </div>
+                    </div>
+                    <div class="mt-2 text-center">
+                        <a href="{{ url_for('contributors') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-users"></i> View All Contributors
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Achievement Badges Widget -->
+            {% include 'badge_widget.html' %}
+            
+            <!-- Notification Widget -->
+            {% include 'notification_widget.html' %}
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -278,5 +364,273 @@
                 }
             });
         });
+    
+    // Git Pull Timing Functionality
+    const runGitPullBtn = document.getElementById('runGitPull');
+    const gitStatus = document.getElementById('gitStatus');
+    const pullHistoryList = document.getElementById('pullHistoryList');
+    const avgPullTime = document.getElementById('avgPullTime');
+    const totalPulls = document.getElementById('totalPulls');
+    const lastPullTime = document.getElementById('lastPullTime');
+    
+    // Load pull history from localStorage
+    let pullHistory = JSON.parse(localStorage.getItem('gitPullHistory') || '[]');
+    
+    // Initialize git pull widget
+    function initGitPullWidget() {
+        updateGitStats();
+        displayPullHistory();
+    }
+    
+    // Run git pull with timing
+    if (runGitPullBtn) {
+        runGitPullBtn.addEventListener('click', function() {
+            performGitPull();
+        });
+    }
+    
+    async function performGitPull() {
+        const startTime = Date.now();
+        const pullStartTimestamp = new Date().toISOString();
+        
+        // Update UI to show pulling state
+        updateGitStatus('pulling', 'Pulling changes...', startTime);
+        runGitPullBtn.disabled = true;
+        
+        try {
+            // Call the backend API to perform git pull
+            const response = await fetch('/api/git/pull', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            const result = await response.json();
+            const endTime = Date.now();
+            const duration = endTime - startTime;
+            
+            if (response.ok) {
+                // Success
+                const pullData = {
+                    timestamp: pullStartTimestamp,
+                    duration: duration,
+                    status: 'success',
+                    changes: result.changes || 0,
+                    message: result.message || 'Pull completed successfully'
+                };
+                
+                addPullToHistory(pullData);
+                updateGitStatus('success', `Pull completed in ${formatDuration(duration)}`, duration);
+            } else {
+                throw new Error(result.error || 'Pull failed');
+            }
+            
+        } catch (error) {
+            const endTime = Date.now();
+            const duration = endTime - startTime;
+            
+            const pullData = {
+                timestamp: pullStartTimestamp,
+                duration: duration,
+                status: 'error',
+                error: error.message
+            };
+            
+            addPullToHistory(pullData);
+            updateGitStatus('error', `Pull failed: ${error.message}`, duration);
+        } finally {
+            runGitPullBtn.disabled = false;
+            
+            // Reset status after 5 seconds
+            setTimeout(() => {
+                updateGitStatus('ready', 'Ready to pull');
+            }, 5000);
+        }
+    }
+    
+    function updateGitStatus(state, message, duration = null) {
+        gitStatus.className = `git-status ${state}`;
+        
+        let icon = 'fas fa-clock';
+        if (state === 'pulling') icon = 'fas fa-spinner fa-spin';
+        else if (state === 'success') icon = 'fas fa-check-circle';
+        else if (state === 'error') icon = 'fas fa-exclamation-circle';
+        
+        const timeText = duration ? ` (${formatDuration(duration)})` : '';
+        
+        gitStatus.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="${icon} me-2"></i>
+                <span>${message}${timeText}</span>
+            </div>
+        `;
+    }
+    
+    function addPullToHistory(pullData) {
+        pullHistory.unshift(pullData);
+        
+        // Keep only last 10 pulls
+        if (pullHistory.length > 10) {
+            pullHistory = pullHistory.slice(0, 10);
+        }
+        
+        // Save to localStorage
+        localStorage.setItem('gitPullHistory', JSON.stringify(pullHistory));
+        
+        // Update UI
+        updateGitStats();
+        displayPullHistory();
+    }
+    
+    function displayPullHistory() {
+        if (pullHistory.length === 0) {
+            pullHistoryList.innerHTML = '<div class="text-muted text-center py-2">No pulls yet</div>';
+            return;
+        }
+        
+        pullHistoryList.innerHTML = pullHistory.map(pull => {
+            const timeAgo = getTimeAgo(new Date(pull.timestamp));
+            const statusIcon = pull.status === 'success' ? 'fas fa-check-circle text-success' : 'fas fa-times-circle text-danger';
+            const durationClass = getDurationClass(pull.duration);
+            
+            return `
+                <div class="pull-history-item ${pull.status}">
+                    <div class="d-flex align-items-center">
+                        <i class="${statusIcon} me-2"></i>
+                        <div>
+                            <div class="fw-bold">${formatDuration(pull.duration)}</div>
+                            <small class="text-muted">${timeAgo}</small>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <span class="pull-time ${durationClass}">${formatDuration(pull.duration)}</span>
+                        ${pull.changes ? `<br><small class="text-muted">${pull.changes} changes</small>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    function updateGitStats() {
+        const successfulPulls = pullHistory.filter(p => p.status === 'success');
+        
+        if (successfulPulls.length > 0) {
+            const avgTime = successfulPulls.reduce((sum, pull) => sum + pull.duration, 0) / successfulPulls.length;
+            avgPullTime.textContent = formatDuration(avgTime);
+            
+            const lastPull = pullHistory[0];
+            lastPullTime.textContent = getTimeAgo(new Date(lastPull.timestamp));
+        }
+        
+        totalPulls.textContent = pullHistory.length;
+    }
+    
+    function formatDuration(ms) {
+        if (ms < 1000) return `${ms}ms`;
+        if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+        return `${(ms / 60000).toFixed(1)}m`;
+    }
+    
+    function getDurationClass(duration) {
+        if (duration > 10000) return 'very-slow'; // > 10s
+        if (duration > 5000) return 'slow'; // > 5s
+        return '';
+    }
+    
+    function getTimeAgo(date) {
+        const now = new Date();
+        const diffMs = now - date;
+        const diffSecs = Math.floor(diffMs / 1000);
+        const diffMins = Math.floor(diffSecs / 60);
+        const diffHours = Math.floor(diffMins / 60);
+        
+        if (diffSecs < 60) return 'Just now';
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        return date.toLocaleDateString();
+    }
+    
+    // Initialize git pull widget
+    initGitPullWidget();
+    
+    // Quick Search Functionality
+    const quickSearchInput = document.getElementById('quickSearch');
+    const quickSearchResults = document.getElementById('quickSearchResults');
+    let searchTimeout;
+    
+    if (quickSearchInput) {
+        quickSearchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+            
+            if (query.length < 2) {
+                quickSearchResults.style.display = 'none';
+                return;
+            }
+            
+            searchTimeout = setTimeout(() => {
+                // Simulate API call - in real implementation, call /api/contributors
+                fetch(`/api/contributors`)
+                    .then(response => response.json())
+                    .then(contributors => {
+                        const filteredResults = contributors.filter(contributor => 
+                            contributor.name.toLowerCase().includes(query.toLowerCase()) ||
+                            contributor.github_username.toLowerCase().includes(query.toLowerCase())
+                        ).slice(0, 5); // Limit to 5 results
+                        
+                        displayQuickSearchResults(filteredResults, query);
+                    })
+                    .catch(error => {
+                        console.error('Search error:', error);
+                        quickSearchResults.style.display = 'none';
+                    });
+            }, 300);
+        });
+        
+        // Hide results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!quickSearchInput.contains(e.target) && !quickSearchResults.contains(e.target)) {
+                quickSearchResults.style.display = 'none';
+            }
+        });
+    }
+    
+    function displayQuickSearchResults(results, query) {
+        const resultsContainer = quickSearchResults.querySelector('.list-group');
+        
+        if (results.length === 0) {
+            resultsContainer.innerHTML = `
+                <div class="list-group-item text-center text-muted py-3">
+                    <i class="fas fa-search-minus"></i>
+                    <div>No contributors found for "${query}"</div>
+                </div>
+            `;
+        } else {
+            resultsContainer.innerHTML = results.map(contributor => `
+                <a href="/contributor/${contributor.github_username}" 
+                   class="list-group-item list-group-item-action d-flex align-items-center">
+                    <img src="https://github.com/${contributor.github_username}.png" 
+                         class="rounded-circle me-3" 
+                         width="32" height="32"
+                         onerror="this.src='https://via.placeholder.com/32x32/6c757d/ffffff?text=${contributor.name[0].toUpperCase()}'">
+                    <div class="flex-grow-1">
+                        <div class="fw-bold">${highlightMatch(contributor.name, query)}</div>
+                        <small class="text-muted">@${highlightMatch(contributor.github_username, query)}</small>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted">${contributor.contribution_count || 0} contributions</small>
+                    </div>
+                </a>
+            `).join('');
+        }
+        
+        quickSearchResults.style.display = 'block';
+    }
+    
+    function highlightMatch(text, query) {
+        const regex = new RegExp(`(${query})`, 'gi');
+        return text.replace(regex, '<mark>$1</mark>');
+    }
 </script>
 {% endblock %}

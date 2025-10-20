@@ -353,6 +353,172 @@ async function exportData(endpoint, filename) {
     }
 }
 
+/**
+ * Real-time notification system
+ */
+class NotificationSystem {
+    constructor() {
+        this.lastCheck = new Date();
+        this.checkInterval = 30000; // 30 seconds
+        this.init();
+    }
+    
+    init() {
+        this.createNotificationContainer();
+        this.startPolling();
+        this.setupEventListeners();
+    }
+    
+    createNotificationContainer() {
+        if (!document.getElementById('realTimeNotifications')) {
+            const container = document.createElement('div');
+            container.id = 'realTimeNotifications';
+            container.className = 'position-fixed top-0 end-0 p-3';
+            container.style.zIndex = '9999';
+            document.body.appendChild(container);
+        }
+    }
+    
+    async checkForNewNotifications() {
+        try {
+            const response = await fetch(`/api/notifications?user=anonymous&unread_only=true`);
+            const notifications = await response.json();
+            
+            // Show new notifications that arrived after last check
+            const newNotifications = notifications.filter(n => 
+                new Date(n.created_at) > this.lastCheck
+            );
+            
+            newNotifications.forEach(notification => {
+                this.showRealTimeNotification(notification);
+            });
+            
+            this.lastCheck = new Date();
+            
+        } catch (error) {
+            console.error('Error checking for notifications:', error);
+        }
+    }
+    
+    showRealTimeNotification(notification) {
+        const container = document.getElementById('realTimeNotifications');
+        const alertDiv = document.createElement('div');
+        
+        const typeClass = this.getAlertClass(notification.type);
+        const icon = this.getNotificationIcon(notification.type);
+        
+        alertDiv.className = `alert ${typeClass} alert-dismissible fade show notification-toast`;
+        alertDiv.innerHTML = `
+            <div class="d-flex align-items-start">
+                <div class="me-2">${icon}</div>
+                <div class="flex-grow-1">
+                    <h6 class="alert-heading mb-1">${notification.title}</h6>
+                    <p class="mb-0 small">${this.truncateMessage(notification.message, 100)}</p>
+                    ${notification.action_url ? `
+                        <a href="${notification.action_url}" class="btn btn-sm btn-outline-primary mt-2">
+                            ${notification.action_text || 'View'}
+                        </a>
+                    ` : ''}
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        container.appendChild(alertDiv);
+        
+        // Auto-remove after 8 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.classList.remove('show');
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.parentNode.removeChild(alertDiv);
+                    }
+                }, 150);
+            }
+        }, 8000);
+        
+        // Play notification sound (optional)
+        this.playNotificationSound();
+    }
+    
+    getAlertClass(type) {
+        const classes = {
+            'success': 'alert-success',
+            'info': 'alert-info',
+            'warning': 'alert-warning',
+            'error': 'alert-danger',
+            'milestone': 'alert-primary',
+            'welcome': 'alert-success',
+            'achievement': 'alert-warning',
+            'system': 'alert-info'
+        };
+        return classes[type] || 'alert-info';
+    }
+    
+    getNotificationIcon(type) {
+        const icons = {
+            'success': '<i class="fas fa-check-circle"></i>',
+            'info': '<i class="fas fa-info-circle"></i>',
+            'warning': '<i class="fas fa-exclamation-triangle"></i>',
+            'error': '<i class="fas fa-times-circle"></i>',
+            'milestone': '<i class="fas fa-star"></i>',
+            'welcome': '<i class="fas fa-hand-wave"></i>',
+            'achievement': '<i class="fas fa-trophy"></i>',
+            'system': '<i class="fas fa-cog"></i>'
+        };
+        return icons[type] || '<i class="fas fa-bell"></i>';
+    }
+    
+    truncateMessage(message, maxLength) {
+        if (message.length <= maxLength) return message;
+        return message.substr(0, maxLength) + '...';
+    }
+    
+    playNotificationSound() {
+        // Create a subtle notification sound
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.1);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+    }
+    
+    startPolling() {
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                this.checkForNewNotifications();
+            }
+        }, this.checkInterval);
+    }
+    
+    setupEventListeners() {
+        // Listen for visibility changes to pause/resume polling
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                this.checkForNewNotifications();
+            }
+        });
+    }
+}
+
+// Initialize notification system
+let notificationSystem;
+document.addEventListener('DOMContentLoaded', function() {
+    notificationSystem = new NotificationSystem();
+});
+
 // Global utility functions
 window.HacktoberfestUI = {
     showNotification,
@@ -362,5 +528,6 @@ window.HacktoberfestUI = {
     getContributionTypeColor,
     formatContributionType,
     animateCounter,
-    exportData
+    exportData,
+    NotificationSystem
 };

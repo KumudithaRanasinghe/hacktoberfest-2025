@@ -161,6 +161,45 @@ Examples:
         help="Export performance metrics to JSON file"
     )
     
+    # CSV Export/Import options
+    parser.add_argument(
+        "--export-csv",
+        metavar="TYPE",
+        choices=["contributors", "contributions", "metrics", "all"],
+        help="Export data to CSV (contributors, contributions, metrics, or all)"
+    )
+    
+    parser.add_argument(
+        "--export-csv-path",
+        metavar="PATH",
+        help="Output path for CSV export (file or directory)"
+    )
+    
+    parser.add_argument(
+        "--import-contributors",
+        metavar="FILE",
+        help="Import contributors from CSV file"
+    )
+    
+    parser.add_argument(
+        "--import-contributions",
+        metavar="FILE",
+        help="Import contributions from CSV file (use with --import-contributors)"
+    )
+    
+    parser.add_argument(
+        "--csv-template",
+        metavar="TYPE",
+        choices=["contributors", "contributions"],
+        help="Generate and save CSV template (contributors or contributions)"
+    )
+    
+    parser.add_argument(
+        "--csv-template-file",
+        metavar="FILE",
+        help="Output file for CSV template"
+    )
+    
     # Web UI mode
     parser.add_argument(
         "--web",
@@ -385,6 +424,26 @@ Examples:
             print(f"✅ Metrics exported to {args.export_metrics}")
         except Exception as e:
             print(f"❌ Error exporting metrics: {e}")
+    
+    # CSV Export/Import handlers
+    elif args.export_csv:
+        output_path = args.export_csv_path
+        tracker.export_to_csv(args.export_csv, output_path)
+    
+    elif args.import_contributors:
+        contributions_file = args.import_contributions
+        success = tracker.import_from_csv(args.import_contributors, contributions_file)
+        if success:
+            print("\n✅ Data imported successfully!")
+            tracker.print_stats()
+        else:
+            sys.exit(1)
+    
+    elif args.csv_template:
+        template_file = args.csv_template_file
+        tracker.save_csv_template(args.csv_template, template_file)
+        if template_file:
+            print(f"\n💡 Edit {template_file} and use it with --import-contributors")
     
     else:
         # Default behavior - show welcome message and basic stats

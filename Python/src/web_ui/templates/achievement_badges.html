@@ -1,0 +1,416 @@
+{% extends "base.html" %}
+
+{% block title %}Achievement Badges - Hacktoberfest 2025{% endblock %}
+
+{% block head %}
+<style>
+    .main-content {
+        padding-top: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Achievement Badges Header -->
+    <div class="achievement-badges-container">
+        <div class="achievement-badges-header">
+            <h1 class="achievement-badges-title">
+                <i class="fas fa-trophy text-warning"></i>
+                Achievement Badges
+            </h1>
+            <p class="achievement-badges-subtitle">
+                Unlock badges by contributing to Hacktoberfest 2025! Track your progress and showcase your achievements.
+            </p>
+            
+            <!-- Overall Progress -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <small class="text-muted">Overall Progress</small>
+                    <small class="text-muted"><span id="earned-count">3</span> / <span id="total-count">12</span> Badges</small>
+                </div>
+                <div class="achievement-progress-bar">
+                    <div class="achievement-progress-fill" style="width: 25%" id="progress-fill"></div>
+                </div>
+                <small class="text-muted mt-1 d-block">Keep contributing to unlock more badges!</small>
+            </div>
+        </div>
+
+        <!-- Badge Categories Navigation -->
+        <div class="badge-categories-nav">
+            <button class="badge-category-tab active" data-category="all">
+                <i class="fas fa-th"></i> All Badges
+            </button>
+            <button class="badge-category-tab" data-category="contribution">
+                <i class="fas fa-code"></i> Contribution
+            </button>
+            <button class="badge-category-tab" data-category="engagement">
+                <i class="fas fa-users"></i> Engagement
+            </button>
+            <button class="badge-category-tab" data-category="special">
+                <i class="fas fa-star"></i> Special
+            </button>
+        </div>
+
+        <!-- Badges Grid -->
+        <div class="badges-grid" id="badges-grid">
+            <!-- First Contribution Badge -->
+            <div class="achievement-badge earned" data-category="contribution" data-badge="first-contribution">
+                <div class="badge-earned-indicator">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="badge-icon-container">
+                    <div class="badge-icon first-contribution">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                </div>
+                <div class="badge-title">First Contribution</div>
+                <div class="badge-description">Made your first contribution to Hacktoberfest!</div>
+                <div class="badge-tooltip">Congratulations on your first step into open source!</div>
+            </div>
+
+            <!-- Streak Master Badge -->
+            <div class="achievement-badge earned" data-category="contribution" data-badge="streak-master">
+                <div class="badge-earned-indicator">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="badge-icon-container">
+                    <div class="badge-icon streak-master">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                </div>
+                <div class="badge-title">Streak Master</div>
+                <div class="badge-description">Maintained a 5-day contribution streak!</div>
+                <div class="badge-tooltip">You're on fire! Keep the momentum going!</div>
+            </div>
+
+            <!-- Bug Hunter Badge -->
+            <div class="achievement-badge earned" data-category="contribution" data-badge="bug-hunter">
+                <div class="badge-earned-indicator">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="badge-icon-container">
+                    <div class="badge-icon bug-hunter">
+                        <i class="fas fa-bug"></i>
+                    </div>
+                </div>
+                <div class="badge-title">Bug Hunter</div>
+                <div class="badge-description">Found and fixed 3 bugs in different projects!</div>
+                <div class="badge-tooltip">Great detective work! You're making projects better!</div>
+            </div>
+
+            <!-- Feature Creator Badge -->
+            <div class="achievement-badge locked" data-category="contribution" data-badge="feature-creator">
+                <div class="badge-locked-overlay">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="badge-icon-container">
+                    <div class="badge-icon feature-creator">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                </div>
+                <div class="badge-title">Feature Creator</div>
+                <div class="badge-description">Implement 5 new features across projects</div>
+                <div class="badge-progress">2/5 Features</div>
+                <div class="badge-tooltip">Add new features to unlock this badge!</div>
+            </div>
+
+            <!-- Documentation Guru Badge -->
+            <div class="achievement-badge locked" data-category="contribution" data-badge="documentation-guru">
+                <div class="badge-locked-overlay">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="badge-icon-container">
+                    <div class="badge-icon documentation-guru">
+                        <i class="fas fa-book"></i>
+                    </div>
+                </div>
+                <div class="badge-title">Documentation Guru</div>
+                <div class="badge-description">Improve documentation in 10 repositories</div>
+                <div class="badge-progress">1/10 Docs</div>
+                <div class="badge-tooltip">Help others by improving documentation!</div>
+            </div>
+
+            <!-- Test Champion Badge -->
+            <div class="achievement-badge locked" data-category="contribution" data-badge="test-champion">
+                <div class="badge-locked-overlay">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="badge-icon-container">
+                    <div class="badge-icon test-champion">
+                        <i class="fas fa-vial"></i>
+                    </div>
+                </div>
+                <div class="badge-title">Test Champion</div>
+                <div class="badge-description">Add comprehensive tests to 5 projects</div>
+                <div class="badge-progress">0/5 Tests</div>
+                <div class="badge-tooltip">Quality matters! Add tests to earn this badge!</div>
+            </div>
+
+            <!-- Early Bird Badge -->
+            <div class="achievement-badge locked" data-category="special" data-badge="early-bird">
+                <div class="badge-locked-overlay">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="badge-icon-container">
+                    <div class="badge-icon early-bird">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                </div>
+                <div class="badge-title">Early Bird</div>
+                <div class="badge-description">Start contributing in the first week of October</div>
+                <div class="badge-progress">Missed</div>
+                <div class="badge-tooltip">Available only in the first week of Hacktoberfest!</div>
+            </div>
+
+            <!-- Team Player Badge -->
+            <div class="achievement-badge locked" data-category="engagement" data-badge="team-player">
+                <div class="badge-locked-overlay">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="badge-icon-container">
+                    <div class="badge-icon team-player">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                </div>
+                <div class="badge-title">Team Player</div>
+                <div class="badge-description">Collaborate on 3 different team projects</div>
+                <div class="badge-progress">1/3 Teams</div>
+                <div class="badge-tooltip">Collaboration makes everything better!</div>
+            </div>
+
+            <!-- Milestone Achiever Badge -->
+            <div class="achievement-badge locked" data-category="special" data-badge="milestone-achiever">
+                <div class="badge-locked-overlay">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="badge-icon-container">
+                    <div class="badge-icon milestone-achiever">
+                        <i class="fas fa-flag-checkered"></i>
+                    </div>
+                </div>
+                <div class="badge-title">Milestone Achiever</div>
+                <div class="badge-description">Complete all 4 required Hacktoberfest PRs</div>
+                <div class="badge-progress">3/4 PRs</div>
+                <div class="badge-tooltip">Almost there! One more PR to complete Hacktoberfest!</div>
+            </div>
+
+            <!-- Hacktoberfest Hero Badge -->
+            <div class="achievement-badge locked" data-category="special" data-badge="hacktoberfest-hero">
+                <div class="badge-locked-overlay">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="badge-icon-container">
+                    <div class="badge-icon hacktoberfest-hero">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                </div>
+                <div class="badge-title">Hacktoberfest Hero</div>
+                <div class="badge-description">Complete Hacktoberfest and earn 10+ badges</div>
+                <div class="badge-progress">3/10 Badges</div>
+                <div class="badge-tooltip">The ultimate Hacktoberfest achievement!</div>
+            </div>
+
+            <!-- Super Contributor Badge -->
+            <div class="achievement-badge locked" data-category="contribution" data-badge="super-contributor">
+                <div class="badge-locked-overlay">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="badge-icon-container">
+                    <div class="badge-icon super-contributor">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                </div>
+                <div class="badge-title">Super Contributor</div>
+                <div class="badge-description">Make 20+ contributions in one month</div>
+                <div class="badge-progress">5/20 Contributions</div>
+                <div class="badge-tooltip">You're becoming a contribution machine!</div>
+            </div>
+
+            <!-- Mentor Badge -->
+            <div class="achievement-badge locked" data-category="engagement" data-badge="mentor">
+                <div class="badge-locked-overlay">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="badge-icon-container">
+                    <div class="badge-icon mentor">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                </div>
+                <div class="badge-title">Mentor</div>
+                <div class="badge-description">Help 5 new contributors with their first PRs</div>
+                <div class="badge-progress">0/5 Mentored</div>
+                <div class="badge-tooltip">Share your knowledge and help others grow!</div>
+            </div>
+        </div>
+
+        <!-- Badge Stats -->
+        <div class="row mt-5">
+            <div class="col-md-4">
+                <div class="text-center p-3 bg-white rounded-3 shadow-sm">
+                    <div class="h3 text-success mb-1">3</div>
+                    <small class="text-muted">Badges Earned</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-3 bg-white rounded-3 shadow-sm">
+                    <div class="h3 text-warning mb-1">6</div>
+                    <small class="text-muted">In Progress</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-3 bg-white rounded-3 shadow-sm">
+                    <div class="h3 text-info mb-1">3</div>
+                    <small class="text-muted">Locked</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Badge filtering functionality
+    const categoryTabs = document.querySelectorAll('.badge-category-tab');
+    const badges = document.querySelectorAll('.achievement-badge');
+    
+    categoryTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Update active tab
+            categoryTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            const category = this.dataset.category;
+            
+            // Filter badges
+            badges.forEach(badge => {
+                if (category === 'all' || badge.dataset.category === category) {
+                    badge.style.display = 'flex';
+                    badge.style.animation = 'fadeInUp 0.5s ease-out';
+                } else {
+                    badge.style.display = 'none';
+                }
+            });
+        });
+    });
+    
+    // Add click sound effect simulation
+    badges.forEach(badge => {
+        badge.addEventListener('click', function() {
+            if (this.classList.contains('earned')) {
+                // Create a celebratory effect for earned badges
+                this.style.animation = 'none';
+                setTimeout(() => {
+                    this.style.animation = 'earnedPulse 0.5s ease-out';
+                }, 10);
+            } else {
+                // Shake effect for locked badges
+                this.style.animation = 'none';
+                setTimeout(() => {
+                    this.style.animation = 'shake 0.5s ease-out';
+                }, 10);
+            }
+        });
+    });
+    
+    // Update progress bar based on earned badges
+    function updateProgress() {
+        const earnedBadges = document.querySelectorAll('.achievement-badge.earned').length;
+        const totalBadges = badges.length;
+        const percentage = (earnedBadges / totalBadges) * 100;
+        
+        document.getElementById('earned-count').textContent = earnedBadges;
+        document.getElementById('total-count').textContent = totalBadges;
+        document.getElementById('progress-fill').style.width = percentage + '%';
+    }
+    
+    // Initialize progress
+    updateProgress();
+    
+    // Add shake animation for locked badges
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) translateY(-2px); }
+            25% { transform: translateX(-2px) translateY(-2px); }
+            75% { transform: translateX(2px) translateY(-2px); }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Simulate real-time badge updates (in a real app, this would come from the backend)
+    setTimeout(() => {
+        const milestoneAchiever = document.querySelector('[data-badge="milestone-achiever"]');
+        if (milestoneAchiever && milestoneAchiever.classList.contains('locked')) {
+            // Simulate earning the milestone achiever badge
+            console.log('Badge system ready for real-time updates!');
+        }
+    }, 3000);
+});
+
+// Function to earn a badge (to be called from other parts of the application)
+function earnBadge(badgeId) {
+    const badge = document.querySelector(`[data-badge="${badgeId}"]`);
+    if (badge && badge.classList.contains('locked')) {
+        badge.classList.remove('locked');
+        badge.classList.add('earned');
+        
+        // Add earned indicator
+        const indicator = document.createElement('div');
+        indicator.className = 'badge-earned-indicator';
+        indicator.innerHTML = '<i class="fas fa-check"></i>';
+        badge.appendChild(indicator);
+        
+        // Remove locked overlay
+        const overlay = badge.querySelector('.badge-locked-overlay');
+        if (overlay) overlay.remove();
+        
+        // Remove progress indicator
+        const progress = badge.querySelector('.badge-progress');
+        if (progress) progress.remove();
+        
+        // Add celebration animation
+        badge.style.animation = 'earnedPulse 2s ease-out';
+        
+        // Update overall progress
+        setTimeout(() => {
+            const earnedBadges = document.querySelectorAll('.achievement-badge.earned').length;
+            const totalBadges = document.querySelectorAll('.achievement-badge').length;
+            const percentage = (earnedBadges / totalBadges) * 100;
+            
+            document.getElementById('earned-count').textContent = earnedBadges;
+            document.getElementById('progress-fill').style.width = percentage + '%';
+        }, 100);
+        
+        // Show notification (if notification system is available)
+        if (typeof showNotification === 'function') {
+            showNotification(`🎉 Badge Earned: ${badge.querySelector('.badge-title').textContent}!`, 'achievement');
+        }
+    }
+}
+
+// Function to update badge progress
+function updateBadgeProgress(badgeId, current, total) {
+    const badge = document.querySelector(`[data-badge="${badgeId}"]`);
+    if (badge) {
+        const progressElement = badge.querySelector('.badge-progress');
+        if (progressElement) {
+            progressElement.textContent = `${current}/${total} ${progressElement.textContent.split(' ').slice(-1)[0]}`;
+            
+            // Check if badge should be earned
+            if (current >= total) {
+                earnBadge(badgeId);
+            }
+        }
+    }
+}
+
+// Export functions for use in other parts of the application
+window.BadgeSystem = {
+    earnBadge,
+    updateBadgeProgress
+};
+</script>
+{% endblock %}

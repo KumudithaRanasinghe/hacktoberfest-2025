@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Optional
 from .contributor import Contributor
 from .email_notifier import EmailNotifier
 from .performance_metrics import PerformanceMetrics
+from .csv_handler import CSVHandler
 
 
 class ProjectTracker:
@@ -491,6 +492,111 @@ class ProjectTracker:
                   f"{ranking['engagement_score']:<8.1f} {status:<12}")
         
         print("=" * 70)
+    
+    # CSV Export/Import Methods
+    
+    def export_to_csv(self, csv_type: str = "all", output_path: str = None) -> bool:
+        """
+        Export project data to CSV file(s).
+        
+        Args:
+            csv_type (str): Type of export ('contributors', 'contributions', 'metrics', or 'all')
+            output_path (str): Path for output file or directory
+            
+        Returns:
+            bool: True if export successful
+        """
+        if csv_type == "contributors":
+            filename = output_path or "contributors.csv"
+            return CSVHandler.export_contributors_to_csv(self.get_all_contributors(), filename)
+        
+        elif csv_type == "contributions":
+            filename = output_path or "contributions.csv"
+            return CSVHandler.export_contributions_to_csv(self.get_all_contributors(), filename)
+        
+        elif csv_type == "metrics":
+            filename = output_path or "metrics.csv"
+            return CSVHandler.export_metrics_to_csv(self.get_all_contributors(), filename)
+        
+        elif csv_type == "all":
+            output_dir = output_path or "exports"
+            return CSVHandler.export_all_to_csv(self.get_all_contributors(), output_dir)
+        
+        else:
+            print(f"❌ Unknown export type: {csv_type}")
+            return False
+    
+    def import_from_csv(self, contributors_file: str, contributions_file: str = None) -> bool:
+        """
+        Import project data from CSV file(s).
+        
+        Args:
+            contributors_file (str): Path to contributors CSV file
+            contributions_file (str): Path to contributions CSV file (optional)
+            
+        Returns:
+            bool: True if import successful
+        """
+        try:
+            # Import contributors
+            imported_contributors, errors = CSVHandler.import_contributors_from_csv(contributors_file)
+            
+            if not imported_contributors:
+                print("❌ No contributors imported")
+                return False
+            
+            # Add imported contributors to tracker
+            for contributor in imported_contributors:
+                existing = self.contributors.get(contributor.github_username)
+                if existing:
+                    print(f"⚠️  Contributor {contributor.github_username} already exists, skipping")
+                else:
+                    self.contributors[contributor.github_username] = contributor
+            
+            # Import contributions if file provided
+            if contributions_file:
+                contrib_count, import_errors = CSVHandler.import_contributions_from_csv(
+                    self.contributors, contributions_file
+                )
+                errors.extend(import_errors)
+            
+            self.save_data()
+            
+            if errors:
+                print(f"⚠️  Import completed with {len(errors)} warnings/errors")
+            else:
+                print("✅ Import completed successfully")
+            
+            return len(imported_contributors) > 0
+        
+        except Exception as e:
+            print(f"❌ Error importing from CSV: {e}")
+            return False
+    
+    def get_csv_template(self, template_type: str = "contributors") -> str:
+        """
+        Get a CSV template.
+        
+        Args:
+            template_type (str): Type of template ('contributors' or 'contributions')
+            
+        Returns:
+            str: CSV template
+        """
+        return CSVHandler.get_csv_template(template_type)
+    
+    def save_csv_template(self, template_type: str = "contributors", filename: str = None) -> bool:
+        """
+        Save a CSV template to file.
+        
+        Args:
+            template_type (str): Type of template
+            filename (str): Output filename
+            
+        Returns:
+            bool: True if successful
+        """
+        return CSVHandler.save_csv_template(template_type, filename)
     
     def __str__(self) -> str:
         """String representation of the project tracker."""

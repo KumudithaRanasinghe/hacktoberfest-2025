@@ -22,18 +22,36 @@
         </div>
     </div>
 
-    <!-- Search and Filter -->
+    <!-- Enhanced Search and Filter -->
     <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="input-group">
+        <div class="col-md-5">
+            <div class="input-group search-box">
                 <span class="input-group-text">
                     <i class="fas fa-search"></i>
                 </span>
                 <input type="text" class="form-control" id="searchInput" 
-                       placeholder="Search contributors by name or username...">
+                       placeholder="Search contributors by name or username..."
+                       autocomplete="off">
+                <button class="btn btn-outline-secondary" type="button" id="clearSearch" title="Clear search">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
+            <small class="text-muted">
+                <i class="fas fa-keyboard"></i> Press <kbd>Ctrl+K</kbd> to focus search
+            </small>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
+            <select class="form-select" id="contributionTypeFilter">
+                <option value="">All Contribution Types</option>
+                <option value="bug-fix">🐛 Bug Fixes</option>
+                <option value="feature">✨ Features</option>
+                <option value="documentation">📝 Documentation</option>
+                <option value="testing">🧪 Testing</option>
+                <option value="refactoring">🔧 Refactoring</option>
+                <option value="enhancement">⚡ Enhancements</option>
+            </select>
+        </div>
+        <div class="col-md-3">
             <select class="form-select" id="sortSelect">
                 <option value="name">Sort by Name</option>
                 <option value="contributions">Sort by Contributions</option>
@@ -41,115 +59,139 @@
             </select>
         </div>
     </div>
+    
+    <!-- Search Results Summary -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="search-results-summary" id="searchSummary" style="display: none;">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <span id="searchResultsText">Showing results for your search</span>
+                    <button type="button" class="btn-close float-end" id="clearFilters"></button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Contributors Grid -->
-    <div class="row" id="contributorsGrid">
-        {% if contributors %}
-            {% for contributor in contributors %}
-            <div class="col-md-6 col-lg-4 mb-4 contributor-card" 
-                 data-name="{{ contributor.name.lower() }}" 
-                 data-username="{{ contributor.github_username.lower() }}"
-                 data-contributions="{{ contributor.get_contribution_count() }}">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <!-- Avatar and Name -->
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="flex-shrink-0">
+    <div class="contributors-grid-container">
+        <div class="row" id="contributorsGrid">
+            {% if contributors %}
+                {% for contributor in contributors %}
+                <div class="col-md-6 col-lg-4 mb-4 contributor-card animate-in" 
+                     data-name="{{ contributor.name.lower() }}" 
+                     data-username="{{ contributor.github_username.lower() }}"
+                     data-contributions="{{ contributor.get_contribution_count() }}"
+                     data-contribution-types="{% for contribution in contributor.contributions %}{{ contribution.type }}{% if not loop.last %},{% endif %}{% endfor %}">>
+                    <div class="contributor-grid-card">
+                        
+                        <!-- Completion Badge -->
+                        {% set contribution_count = contributor.get_contribution_count() %}
+                        <div class="completion-badge 
+                            {% if contribution_count >= 4 %}completed
+                            {% elif contribution_count >= 2 %}in-progress
+                            {% elif contribution_count >= 1 %}started
+                            {% endif %}">
+                            {% if contribution_count >= 4 %}✓
+                            {% else %}{{ contribution_count }}
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Card Header -->
+                        <div class="contributor-card-header">
+                            <div class="contributor-avatar-wrapper">
                                 <img src="https://github.com/{{ contributor.github_username }}.png" 
                                      alt="{{ contributor.name }}" 
-                                     class="rounded-circle" 
-                                     width="60" height="60"
-                                     onerror="this.src='https://via.placeholder.com/60x60/6c757d/ffffff?text={{ contributor.name[0]|upper }}'">
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <h5 class="card-title mb-1">{{ contributor.name }}</h5>
-                                <p class="card-text text-muted mb-0">
-                                    <i class="fab fa-github"></i>
-                                    <a href="https://github.com/{{ contributor.github_username }}" 
-                                       target="_blank" class="text-decoration-none">
-                                        @{{ contributor.github_username }}
-                                    </a>
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Stats -->
-                        <div class="row text-center mb-3">
-                            <div class="col-4">
-                                <div class="text-primary">
-                                    <i class="fas fa-code-branch fa-lg"></i>
-                                </div>
-                                <small class="text-muted">Contributions</small>
-                                <div class="fw-bold">{{ contributor.get_contribution_count() }}</div>
-                            </div>
-                            <div class="col-4">
-                                <div class="text-success">
-                                    <i class="fas fa-calendar fa-lg"></i>
-                                </div>
-                                <small class="text-muted">Joined</small>
-                                <div class="fw-bold">{{ contributor.joined_date.strftime('%b %d') }}</div>
-                            </div>
-                            <div class="col-4">
-                                <div class="text-info">
-                                    <i class="fas fa-folder fa-lg"></i>
-                                </div>
-                                <small class="text-muted">Repos</small>
-                                <div class="fw-bold">
-                                    {{ contributor.contributions|map(attribute='repo_name')|list|unique|list|length }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Contribution Types -->
-                        {% if contributor.contributions %}
-                        <div class="mb-3">
-                            <small class="text-muted">Recent contributions:</small>
-                            <div class="mt-1">
-                                {% set contribution_types = contributor.contributions|map(attribute='type')|list %}
-                                {% for type in contribution_types[:3] %}
-                                    <span class="badge bg-{{ get_type_color(type) }} me-1">{{ type }}</span>
-                                {% endfor %}
-                                {% if contribution_types|length > 3 %}
-                                    <span class="badge bg-secondary">+{{ contribution_types|length - 3 }}</span>
+                                     class="contributor-avatar-large"
+                                     onerror="this.src='https://via.placeholder.com/80x80/6c757d/ffffff?text={{ contributor.name[0]|upper }}'">
+                                {% if contribution_count >= 1 %}
+                                <div class="contributor-status-dot"></div>
                                 {% endif %}
                             </div>
+                            
+                            <h3 class="contributor-name-large">{{ contributor.name }}</h3>
+                            <a href="https://github.com/{{ contributor.github_username }}" 
+                               target="_blank" class="contributor-username-large">
+                                <i class="fab fa-github"></i>
+                                @{{ contributor.github_username }}
+                            </a>
+                        </div>
+
+                        <!-- Stats Section -->
+                        <div class="contributor-stats-section">
+                            <div class="contributor-stats-row">
+                                <div class="contributor-stat-item">
+                                    <div class="contributor-stat-icon stat-icon-contributions">
+                                        <i class="fas fa-code-branch"></i>
+                                    </div>
+                                    <span class="contributor-stat-number">{{ contributor.get_contribution_count() }}</span>
+                                    <span class="contributor-stat-label">Contributions</span>
+                                </div>
+                                <div class="contributor-stat-item">
+                                    <div class="contributor-stat-icon stat-icon-joined">
+                                        <i class="fas fa-calendar"></i>
+                                    </div>
+                                    <span class="contributor-stat-number">{{ contributor.joined_date.strftime('%b %d') }}</span>
+                                    <span class="contributor-stat-label">Joined</span>
+                                </div>
+                                <div class="contributor-stat-item">
+                                    <div class="contributor-stat-icon stat-icon-repos">
+                                        <i class="fas fa-folder"></i>
+                                    </div>
+                                    <span class="contributor-stat-number">
+                                        {{ contributor.contributions|map(attribute='repo_name')|list|unique|list|length }}
+                                    </span>
+                                    <span class="contributor-stat-label">Repos</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Badges Section -->
+                        {% if contributor.contributions %}
+                        <div class="contributor-badges-section">
+                            {% set contribution_types = contributor.contributions|map(attribute='type')|list|unique|list %}
+                            {% for type in contribution_types[:4] %}
+                                <span class="contributor-badge-item">{{ type }}</span>
+                            {% endfor %}
+                            {% if contribution_types|length > 4 %}
+                                <span class="contributor-badge-item">+{{ contribution_types|length - 4 }}</span>
+                            {% endif %}
                         </div>
                         {% endif %}
 
-                        <!-- Email -->
+                        <!-- Email Section -->
                         {% if contributor.email %}
-                        <div class="mb-3">
-                            <small class="text-muted">
+                        <div class="contributor-email-section">
+                            <div class="contributor-email-text">
                                 <i class="fas fa-envelope"></i>
                                 {{ contributor.email }}
-                            </small>
+                            </div>
                         </div>
                         {% endif %}
-                    </div>
-                    
-                    <div class="card-footer bg-transparent">
-                        <div class="d-grid">
+
+                        <!-- Actions -->
+                        <div class="contributor-card-actions">
                             <a href="{{ url_for('contributor_detail', username=contributor.github_username) }}" 
-                               class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-eye"></i> View Details
+                               class="btn-view-contributor">
+                                <i class="fas fa-eye"></i> View Profile
                             </a>
                         </div>
                     </div>
                 </div>
-            </div>
-            {% endfor %}
-        {% else %}
-            <div class="col-12">
-                <div class="text-center py-5">
-                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
-                    <h4 class="text-muted">No contributors yet!</h4>
-                    <p class="text-muted">Be the first to add a contributor to this project.</p>
-                    <a href="{{ url_for('add_contributor') }}" class="btn btn-primary">
-                        <i class="fas fa-user-plus"></i> Add First Contributor
-                    </a>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No contributors yet!</h4>
+                        <p class="text-muted">Be the first to add a contributor to this project.</p>
+                        <a href="{{ url_for('add_contributor') }}" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Add First Contributor
+                        </a>
+                    </div>
                 </div>
-            </div>
-        {% endif %}
+            {% endif %}
+        </div>
     </div>
 
     <!-- Pagination placeholder -->
@@ -177,46 +219,240 @@
 
 {% block extra_scripts %}
 <script>
-    // Search functionality
-    document.getElementById('searchInput').addEventListener('keyup', function() {
-        const searchTerm = this.value.toLowerCase();
-        const cards = document.querySelectorAll('.contributor-card');
-        
-        cards.forEach(card => {
-            const name = card.getAttribute('data-name');
-            const username = card.getAttribute('data-username');
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const contributionTypeFilter = document.getElementById('contributionTypeFilter');
+    const sortSelect = document.getElementById('sortSelect');
+    const contributorsGrid = document.getElementById('contributorsGrid');
+    const clearSearchBtn = document.getElementById('clearSearch');
+    const clearFiltersBtn = document.getElementById('clearFilters');
+    const searchSummary = document.getElementById('searchSummary');
+    const searchResultsText = document.getElementById('searchResultsText');
+    
+    // Enhanced search functionality with debouncing
+    let searchTimeout;
+    
+    function performSearch() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedType = contributionTypeFilter.value;
+            const cards = document.querySelectorAll('.contributor-card');
+            let visibleCount = 0;
+            let totalContributors = cards.length;
             
-            if (name.includes(searchTerm) || username.includes(searchTerm)) {
-                card.style.display = 'block';
-            } else {
-                card.style.display = 'none';
-            }
-        });
+            cards.forEach((card, index) => {
+                const name = card.getAttribute('data-name');
+                const username = card.getAttribute('data-username');
+                const contributionTypes = card.getAttribute('data-contribution-types') || '';
+                
+                const matchesSearch = !searchTerm || 
+                    name.includes(searchTerm) || 
+                    username.includes(searchTerm);
+                
+                const matchesType = !selectedType || 
+                    contributionTypes.includes(selectedType);
+                
+                if (matchesSearch && matchesType) {
+                    card.style.display = 'block';
+                    card.style.animationDelay = `${index * 0.05}s`;
+                    card.classList.add('animate-in');
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                    card.classList.remove('animate-in');
+                }
+            });
+            
+            // Update search summary
+            updateSearchSummary(searchTerm, selectedType, visibleCount, totalContributors);
+            
+            // Show "no results" message if needed
+            updateNoResultsMessage(visibleCount === 0 && (searchTerm || selectedType));
+        }, 250);
+    }
+    
+    // Search input event listener
+    searchInput.addEventListener('input', performSearch);
+    
+    // Contribution type filter event listener
+    contributionTypeFilter.addEventListener('change', performSearch);
+    
+    // Clear search button
+    clearSearchBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        searchInput.focus();
+        performSearch();
     });
+    
+    // Clear all filters button
+    clearFiltersBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        contributionTypeFilter.value = '';
+        performSearch();
+        searchInput.focus();
+    });
+    
+    // Update search summary
+    function updateSearchSummary(searchTerm, selectedType, visibleCount, totalCount) {
+        if (searchTerm || selectedType) {
+            let summaryText = `Showing ${visibleCount} of ${totalCount} contributors`;
+            
+            if (searchTerm && selectedType) {
+                const typeName = contributionTypeFilter.options[contributionTypeFilter.selectedIndex].text;
+                summaryText += ` matching "${searchTerm}" with ${typeName}`;
+            } else if (searchTerm) {
+                summaryText += ` matching "${searchTerm}"`;
+            } else if (selectedType) {
+                const typeName = contributionTypeFilter.options[contributionTypeFilter.selectedIndex].text;
+                summaryText += ` with ${typeName}`;
+            }
+            
+            searchResultsText.textContent = summaryText;
+            searchSummary.style.display = 'block';
+        } else {
+            searchSummary.style.display = 'none';
+        }
+    }
 
-    // Sort functionality
-    document.getElementById('sortSelect').addEventListener('change', function() {
+    // Enhanced sort functionality with smooth animations
+    sortSelect.addEventListener('change', function() {
         const sortBy = this.value;
-        const grid = document.getElementById('contributorsGrid');
         const cards = Array.from(document.querySelectorAll('.contributor-card'));
         
-        cards.sort((a, b) => {
-            switch(sortBy) {
-                case 'name':
-                    return a.getAttribute('data-name').localeCompare(b.getAttribute('data-name'));
-                case 'contributions':
-                    return parseInt(b.getAttribute('data-contributions')) - parseInt(a.getAttribute('data-contributions'));
-                case 'recent':
-                    // For now, just reverse the current order (assuming newest are last)
-                    return 0;
-                default:
-                    return 0;
-            }
+        // Add loading state
+        contributorsGrid.style.opacity = '0.7';
+        contributorsGrid.style.pointerEvents = 'none';
+        
+        setTimeout(() => {
+            cards.sort((a, b) => {
+                switch(sortBy) {
+                    case 'name':
+                        return a.getAttribute('data-name').localeCompare(b.getAttribute('data-name'));
+                    case 'contributions':
+                        return parseInt(b.getAttribute('data-contributions')) - parseInt(a.getAttribute('data-contributions'));
+                    case 'recent':
+                        // Reverse current order for recent activity simulation
+                        return cards.indexOf(b) - cards.indexOf(a);
+                    default:
+                        return 0;
+                }
+            });
+            
+            // Clear and re-append sorted cards with staggered animation
+            contributorsGrid.innerHTML = '';
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    contributorsGrid.appendChild(card);
+                    card.style.animationDelay = `${index * 0.03}s`;
+                    card.classList.add('animate-in');
+                }, index * 20);
+            });
+            
+            // Remove loading state
+            setTimeout(() => {
+                contributorsGrid.style.opacity = '1';
+                contributorsGrid.style.pointerEvents = 'auto';
+            }, cards.length * 20 + 200);
+        }, 150);
+    });
+    
+    // Add hover effects for stats
+    document.querySelectorAll('.contributor-stat-item').forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px) scale(1.05)';
         });
         
-        // Clear and re-append sorted cards
-        grid.innerHTML = '';
-        cards.forEach(card => grid.appendChild(card));
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
     });
+    
+    // Intersection Observer for scroll animations
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => {
+                    entry.target.classList.add('animate-in');
+                }, index * 100);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+    
+    // Observe all contributor cards on page load
+    document.querySelectorAll('.contributor-grid-card').forEach(card => {
+        observer.observe(card);
+    });
+    
+    function updateNoResultsMessage(show) {
+        let noResultsMsg = document.querySelector('.no-results-message');
+        
+        if (show && !noResultsMsg) {
+            noResultsMsg = document.createElement('div');
+            noResultsMsg.className = 'no-results-message col-12';
+            noResultsMsg.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No contributors found</h4>
+                    <p class="text-muted">Try adjusting your search terms.</p>
+                    <button class="btn btn-outline-primary" onclick="clearSearch()">
+                        <i class="fas fa-times"></i> Clear Search
+                    </button>
+                </div>
+            `;
+            contributorsGrid.appendChild(noResultsMsg);
+        } else if (!show && noResultsMsg) {
+            noResultsMsg.remove();
+        }
+    }
+    
+    // Global function to clear search
+    window.clearSearch = function() {
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input'));
+        searchInput.focus();
+    };
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey || e.metaKey) {
+            switch(e.key) {
+                case 'k':
+                    e.preventDefault();
+                    searchInput.focus();
+                    break;
+                case '/':
+                    e.preventDefault();
+                    searchInput.focus();
+                    break;
+            }
+        }
+        
+        if (e.key === 'Escape') {
+            if (document.activeElement === searchInput) {
+                searchInput.blur();
+            }
+        }
+    });
+    
+    // Add tooltip for keyboard shortcuts
+    searchInput.setAttribute('title', 'Press Ctrl+K or Ctrl+/ to focus search');
+    
+    // Animate cards on page load
+    setTimeout(() => {
+        document.querySelectorAll('.contributor-grid-card').forEach((card, index) => {
+            setTimeout(() => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.classList.add('animate-in');
+            }, index * 100);
+        });
+    }, 200);
+});
 </script>
 {% endblock %}
