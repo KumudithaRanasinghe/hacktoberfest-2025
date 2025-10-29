@@ -28,7 +28,10 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 keywords = ["hacktoberfest", "open-source", "contributions", "tracking", "python"]
-dependencies = []
+dependencies = [
+    "PyJWT>=2.8.0",
+    "python-dotenv>=1.0.0"
+]
 
 [project.optional-dependencies]
 dev = [

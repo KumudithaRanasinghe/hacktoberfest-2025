@@ -2,7 +2,12 @@
 Email notification system with JWT token generation for Hacktoberfest contributors.
 """
 
-import jwt
+# PyJWT provides the `jwt` module. It's an optional dependency for email token
+# generation. Import lazily and provide a helpful error if it's not available.
+try:
+    import jwt
+except Exception:  # ImportError could be caused by absence or import-time errors
+    jwt = None
 import smtplib
 import os
 from datetime import datetime, timedelta
@@ -17,6 +22,7 @@ class EmailNotifier:
     def __init__(self, smtp_server: str = None, smtp_port: int = 587, 
                  sender_email: str = None, sender_password: str = None,
                  jwt_secret: str = None):
+        
         """
         Initialize the email notifier.
         
@@ -34,10 +40,12 @@ class EmailNotifier:
         self.jwt_secret = jwt_secret or os.getenv("JWT_SECRET", "your-secret-key-change-this")
         self.notification_history: List[Dict] = []
     
+    
     def generate_verification_token(self, email: str, username: str, 
                                     expires_in_hours: int = 24) -> str:
         """
         Generate a JWT verification token for a contributor.
+        
         
         Args:
             email (str): Contributor's email address
@@ -47,6 +55,12 @@ class EmailNotifier:
         Returns:
             str: JWT token
         """
+        # Ensure jwt is available
+        if jwt is None:
+            raise RuntimeError(
+                "PyJWT is required for token generation. Install with: pip install PyJWT"
+            )
+
         payload = {
             "email": email,
             "username": username,
@@ -71,6 +85,12 @@ class EmailNotifier:
         Returns:
             str: JWT token
         """
+        # Ensure jwt is available
+        if jwt is None:
+            raise RuntimeError(
+                "PyJWT is required for token generation. Install with: pip install PyJWT"
+            )
+
         payload = {
             "email": email,
             "username": username,
@@ -92,6 +112,10 @@ class EmailNotifier:
         Returns:
             Tuple[bool, Optional[Dict]]: (is_valid, token_data)
         """
+        # Ensure jwt is available
+        if jwt is None:
+            return False, {"error": "PyJWT not installed. Install with: pip install PyJWT"}
+
         try:
             payload = jwt.decode(token, self.jwt_secret, algorithms=["HS256"])
             return True, payload

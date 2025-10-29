@@ -1,0 +1,64 @@
+{
+  "project_name": "Test Project",
+  "created_date": "2025-10-21T15:59:10.391730",
+  "contributors": {
+    "johndoe": {
+      "name": "John Doe",
+      "github_username": "johndoe",
+      "email": "john@example.com",
+      "joined_date": "2025-10-21T15:59:10.391794",
+      "contributions": [
+        {
+          "repo_name": "repo1",
+          "type": "bug-fix",
+          "description": "Fixed login issue",
+          "pr_number": 123,
+          "date": "2025-10-21T15:59:10.397578"
+        },
+        {
+          "repo_name": "repo2",
+          "type": "feature",
+          "description": "Added new feature",
+          "pr_number": null,
+          "date": "2025-10-21T15:59:10.398522"
+        }
+      ],
+      "contribution_count": 2,
+      "hacktoberfest_complete": false
+    },
+    "janesmith": {
+      "name": "Jane Smith",
+      "github_username": "janesmith",
+      "email": "jane@example.com",
+      "joined_date": "2025-10-21T15:59:10.394925",
+      "contributions": [
+        {
+          "repo_name": "repo1",
+          "type": "documentation",
+          "description": "Updated README",
+          "pr_number": null,
+          "date": "2025-10-21T15:59:10.399423"
+        }
+      ],
+      "contribution_count": 1,
+      "hacktoberfest_complete": false
+    },
+    "bjohnson": {
+      "name": "Bob Johnson",
+      "github_username": "bjohnson",
+      "email": "bob@company.com",
+      "joined_date": "2025-10-21T15:59:10.396208",
+      "contributions": [
+        {
+          "repo_name": "repo2",
+          "type": "bug-fix",
+          "description": "Fixed performance issue",
+          "pr_number": null,
+          "date": "2025-10-21T15:59:10.400789"
+        }
+      ],
+      "contribution_count": 1,
+      "hacktoberfest_complete": false
+    }
+  }
+}

@@ -200,6 +200,126 @@ Examples:
         help="Output file for CSV template"
     )
     
+    # Search and filter options
+    parser.add_argument(
+        "--search-contributors",
+        metavar="QUERY",
+        help="Search contributors by name, username, or email"
+    )
+    
+    parser.add_argument(
+        "--search-type",
+        choices=["exact", "contains", "starts_with", "ends_with", "regex", "fuzzy"],
+        default="contains",
+        help="Type of search (default: contains)"
+    )
+    
+    parser.add_argument(
+        "--search-field",
+        choices=["name", "username", "email", "all"],
+        default="all",
+        help="Field to search in (default: all)"
+    )
+    
+    parser.add_argument(
+        "--case-sensitive",
+        action="store_true",
+        help="Make search case-sensitive"
+    )
+    
+    parser.add_argument(
+        "--search-contributions",
+        metavar="QUERY",
+        help="Search contributions by description, repo, or type"
+    )
+    
+    parser.add_argument(
+        "--search-in",
+        choices=["description", "repo", "type", "all"],
+        default="all",
+        help="Search in specific field (default: all)"
+    )
+    
+    parser.add_argument(
+        "--filter-contributors",
+        metavar="CRITERIA",
+        help="Filter contributors (format: min_contrib:5,max_contrib:20,completed_only:true)"
+    )
+    
+    parser.add_argument(
+        "--filter-contributions",
+        metavar="CRITERIA",
+        help="Filter contributions (format: type:bug-fix,repo:my-repo,has_pr:true)"
+    )
+    
+    parser.add_argument(
+        "--sort-by",
+        choices=["name", "username", "contributions", "joined_date"],
+        default="name",
+        help="Sort results by field (default: name)"
+    )
+    
+    parser.add_argument(
+        "--sort-order",
+        choices=["asc", "desc"],
+        default="asc",
+        help="Sort order (default: asc)"
+    )
+    
+    parser.add_argument(
+        "--search-stats",
+        action="store_true",
+        help="Show search and filter statistics"
+    )
+    
+    # Repository statistics options
+    parser.add_argument(
+        "--repo-stats",
+        metavar="REPO_NAME",
+        help="Show statistics for a specific repository (or 'all' for all repos)"
+    )
+    
+    parser.add_argument(
+        "--repo-list",
+        action="store_true",
+        help="List all repositories with summary statistics"
+    )
+    
+    parser.add_argument(
+        "--repo-top",
+        type=int,
+        metavar="LIMIT",
+        default=10,
+        help="Show top N repositories (default: 10)"
+    )
+    
+    parser.add_argument(
+        "--repo-sort-by",
+        choices=["contributions", "contributors", "activity_score", "pull_requests"],
+        default="contributions",
+        help="Sort repositories by metric (default: contributions)"
+    )
+    
+    parser.add_argument(
+        "--repo-trending",
+        type=int,
+        metavar="DAYS",
+        help="Show trending repositories from last N days"
+    )
+    
+    parser.add_argument(
+        "--repo-compare",
+        nargs="+",
+        metavar="REPO_NAMES",
+        help="Compare multiple repositories"
+    )
+    
+    parser.add_argument(
+        "--repo-health",
+        metavar="REPO_NAME",
+        help="Show health assessment for a repository"
+    )
+    
     # Web UI mode
     parser.add_argument(
         "--web",
@@ -424,6 +544,222 @@ Examples:
             print(f"✅ Metrics exported to {args.export_metrics}")
         except Exception as e:
             print(f"❌ Error exporting metrics: {e}")
+    
+    # CSV Export/Import handlers
+    elif args.export_csv:
+        output_path = args.export_csv_path or "."
+        try:
+            if args.export_csv == "contributors":
+                filename = tracker.export_contributors_to_csv(output_path)
+                print(f"✅ Exported contributors to {filename}")
+            elif args.export_csv == "contributions":
+                filename = tracker.export_contributions_to_csv(output_path)
+                print(f"✅ Exported contributions to {filename}")
+            elif args.export_csv == "metrics":
+                filename = tracker.export_metrics_to_csv(output_path)
+                print(f"✅ Exported metrics to {filename}")
+            elif args.export_csv == "all":
+                filenames = tracker.export_all_to_csv(output_path)
+                print(f"✅ Exported all data:")
+                for filename in filenames:
+                    print(f"   • {filename}")
+        except Exception as e:
+            print(f"❌ Error exporting CSV: {e}")
+    
+    elif args.import_contributors:
+        try:
+            errors = tracker.import_contributors_from_csv(args.import_contributors)
+            if errors:
+                print(f"✅ Imported contributors with {len(errors)} errors:")
+                for error in errors[:5]:
+                    print(f"   ⚠️  {error}")
+                if len(errors) > 5:
+                    print(f"   ... and {len(errors) - 5} more")
+            else:
+                print(f"✅ Imported contributors successfully from {args.import_contributors}")
+        except Exception as e:
+            print(f"❌ Error importing contributors: {e}")
+    
+    elif args.import_contributions:
+        try:
+            errors = tracker.import_contributions_from_csv(args.import_contributions)
+            if errors:
+                print(f"✅ Imported contributions with {len(errors)} errors:")
+                for error in errors[:5]:
+                    print(f"   ⚠️  {error}")
+                if len(errors) > 5:
+                    print(f"   ... and {len(errors) - 5} more")
+            else:
+                print(f"✅ Imported contributions successfully from {args.import_contributions}")
+        except Exception as e:
+            print(f"❌ Error importing contributions: {e}")
+    
+    elif args.csv_template:
+        try:
+            output_file = args.csv_template_file or f"{args.csv_template}_template.csv"
+            tracker.save_csv_template(args.csv_template, output_file)
+            print(f"✅ CSV template saved to {output_file}")
+        except Exception as e:
+            print(f"❌ Error saving CSV template: {e}")
+    
+    # Search and filter handlers
+    elif args.search_contributors:
+        from Contribute_Checker import SearchType, SortOrder
+        
+        search_type = SearchType(args.search_type)
+        sort_order = SortOrder(args.sort_order)
+        
+        results = tracker.search_contributors(
+            args.search_contributors,
+            search_type,
+            args.search_field,
+            args.case_sensitive
+        )
+        
+        # Sort results
+        results = tracker.sort_contributors(results, args.sort_by, sort_order)
+        
+        print(f"\n🔍 Search Results for '{args.search_contributors}' ({len(results)} found) 🔍")
+        print("=" * 70)
+        
+        if results:
+            for contributor in results:
+                print(f"  👤 {contributor.name}")
+                print(f"     Username: @{contributor.github_username}")
+                print(f"     Email: {contributor.email or 'Not provided'}")
+                print(f"     Contributions: {contributor.get_contribution_count()}")
+                print(f"     Joined: {contributor.joined_date.strftime('%Y-%m-%d')}")
+                print()
+        else:
+            print("No contributors found matching your search.")
+    
+    elif args.search_contributions:
+        results = tracker.search_contributions(
+            args.search_contributions,
+            args.search_in,
+            args.case_sensitive
+        )
+        
+        print(f"\n🔍 Contribution Search Results for '{args.search_contributions}' ({len(results)} found) 🔍")
+        print("=" * 70)
+        
+        if results:
+            for contrib in results:
+                print(f"  📝 {contrib.get('description', 'N/A')}")
+                print(f"     By: {contrib['contributor_name']} (@{contrib['contributor_username']})")
+                print(f"     Repository: {contrib['repo_name']}")
+                print(f"     Type: {contrib['type']}")
+                if contrib.get('pr_number'):
+                    print(f"     PR: #{contrib['pr_number']}")
+                print(f"     Date: {contrib.get('date', 'N/A')[:10] if contrib.get('date') else 'N/A'}")
+                print()
+        else:
+            print("No contributions found matching your search.")
+    
+    elif args.filter_contributors:
+        try:
+            # Parse filter criteria
+            filter_dict = {}
+            for item in args.filter_contributors.split(","):
+                key, value = item.split(":")
+                key = key.strip()
+                value = value.strip()
+                
+                if key == "min_contrib":
+                    filter_dict["min_contributions"] = int(value)
+                elif key == "max_contrib":
+                    filter_dict["max_contributions"] = int(value)
+                elif key == "completed_only":
+                    filter_dict["completed_only"] = value.lower() == "true"
+                elif key == "has_email":
+                    filter_dict["has_email"] = value.lower() == "true"
+            
+            results = tracker.filter_contributors(**filter_dict)
+            
+            print(f"\n🔍 Filtered Contributors ({len(results)} found) 🔍")
+            print("=" * 70)
+            
+            for contributor in results:
+                print(f"  👤 {contributor.name} - {contributor.get_contribution_count()} contributions")
+                print(f"     @{contributor.github_username}")
+        except Exception as e:
+            print(f"❌ Error filtering: {e}")
+    
+    elif args.filter_contributions:
+        try:
+            # Parse filter criteria
+            filter_dict = {}
+            for item in args.filter_contributions.split(","):
+                key, value = item.split(":")
+                key = key.strip()
+                value = value.strip()
+                
+                if key == "type":
+                    filter_dict["contribution_type"] = value
+                elif key == "repo":
+                    filter_dict["repo_name"] = value
+                elif key == "has_pr":
+                    filter_dict["has_pr"] = value.lower() == "true"
+            
+            results = tracker.filter_contributions(**filter_dict)
+            
+            print(f"\n🔍 Filtered Contributions ({len(results)} found) 🔍")
+            print("=" * 70)
+            
+            for contrib in results:
+                print(f"  📝 {contrib.get('description', 'N/A')}")
+                print(f"     By: {contrib['contributor_name']}")
+                print(f"     Repo: {contrib['repo_name']} | Type: {contrib['type']}")
+        except Exception as e:
+            print(f"❌ Error filtering: {e}")
+    
+    elif args.search_stats:
+        stats = tracker.get_search_statistics()
+        print("\n📊 Search and Filter Statistics 📊")
+        print("=" * 70)
+        print(f"Total Contributors: {stats['total_contributors']}")
+        print(f"Total Contributions: {stats['total_contributions']}")
+        print(f"Contributors with Email: {stats['contributors_with_email']}")
+        print(f"Completed Hacktoberfest: {stats['completed_hacktoberfest']}")
+        
+        if stats['contribution_types']:
+            print("\nContribution Types:")
+            for ctype, count in sorted(stats['contribution_types'].items(), key=lambda x: x[1], reverse=True):
+                print(f"  • {ctype}: {count}")
+        
+        if stats['repositories']:
+            print("\nRepositories:")
+            for repo, count in sorted(stats['repositories'].items(), key=lambda x: x[1], reverse=True)[:10]:
+                print(f"  • {repo}: {count}")
+    
+    # Repository statistics handlers
+    elif args.repo_stats:
+        if args.repo_stats.lower() == "all":
+            tracker.print_repository_stats()
+        else:
+            tracker.print_repository_stats(args.repo_stats)
+    
+    elif args.repo_list:
+        tracker.print_repository_stats()
+    
+    elif args.repo_trending:
+        tracker.print_trending_repositories(args.repo_trending, args.repo_top)
+    
+    elif args.repo_compare:
+        tracker.print_repository_comparison(args.repo_compare)
+    
+    elif args.repo_health:
+        tracker.print_repository_health(args.repo_health)
+    
+    elif args.search_stats or args.repo_top > 0:
+        # Show top repositories by default metric
+        top_repos = tracker.get_top_repositories(args.repo_top, args.repo_sort_by)
+        print(f"\n🏆 Top {args.repo_top} Repositories (by {args.repo_sort_by}) 🏆")
+        print("=" * 70)
+        
+        for i, (repo_name, stats) in enumerate(top_repos, 1):
+            print(f"  {i}. {repo_name}")
+            print(f"     Contributions: {stats['total_contributions']} | Contributors: {stats['unique_contributors']} | Activity Score: {stats['activity_score']:.1f}/100")
     
     # CSV Export/Import handlers
     elif args.export_csv:

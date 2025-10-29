@@ -3,14 +3,15 @@
 {% block title %}Dashboard - Hacktoberfest 2025{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container-fluid">
     <!-- Header Section -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="text-center">
-                <h1 class="display-4 mb-3">
-                    🎃 Hacktoberfest 2025 Project Tracker
+            <div class="text-center py-4">
+                <h1 class="display-4 mb-2 fw-bold">
+                    🎃 Hacktoberfest 2025
                 </h1>
+                <h2 class="h4 text-primary mb-3">Project Tracker</h2>
                 <p class="lead text-neutral-color">
                     Track your open source contributions and celebrate the spirit of Hacktoberfest!
                 </p>
@@ -18,66 +19,66 @@
         </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="row mb-5">
-        <div class="col-md-3 mb-3">
-            <div class="card bg-primary text-white h-100">
+    <!-- Statistics Cards - Responsive Grid -->
+    <div class="row g-3 mb-5">
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card bg-primary text-white h-100 shadow-sm">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h4 class="card-title">{{ stats.total_contributors }}</h4>
-                            <p class="card-text">Total Contributors</p>
+                            <h4 class="card-title fw-bold mb-1">{{ stats.total_contributors }}</h4>
+                            <p class="card-text mb-0 small">Total Contributors</p>
                         </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-users fa-2x"></i>
+                        <div>
+                            <i class="fas fa-users fa-2x opacity-75"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-3 mb-3">
-            <div class="card bg-success text-white h-100">
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card bg-success text-white h-100 shadow-sm">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h4 class="card-title">{{ stats.total_contributions }}</h4>
-                            <p class="card-text">Total Contributions</p>
+                            <h4 class="card-title fw-bold mb-1">{{ stats.total_contributions }}</h4>
+                            <p class="card-text mb-0 small">Total Contributions</p>
                         </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-code-branch fa-2x"></i>
+                        <div>
+                            <i class="fas fa-code-branch fa-2x opacity-75"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-3 mb-3">
-            <div class="card bg-info text-white h-100">
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card bg-info text-white h-100 shadow-sm">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h4 class="card-title">{{ stats.unique_repositories }}</h4>
-                            <p class="card-text">Unique Repositories</p>
+                            <h4 class="card-title fw-bold mb-1">{{ stats.unique_repositories }}</h4>
+                            <p class="card-text mb-0 small">Unique Repositories</p>
                         </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-folder fa-2x"></i>
+                        <div>
+                            <i class="fas fa-folder fa-2x opacity-75"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-3 mb-3">
-            <div class="card bg-warning text-dark h-100">
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card bg-warning text-dark h-100 shadow-sm">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h4 class="card-title">{{ stats.avg_contributions_per_contributor|round(1) }}</h4>
-                            <p class="card-text">Avg per Contributor</p>
+                            <h4 class="card-title fw-bold mb-1">{{ stats.avg_contributions_per_contributor|round(1) }}</h4>
+                            <p class="card-text mb-0 small">Avg per Contributor</p>
                         </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-chart-line fa-2x"></i>
+                        <div>
+                            <i class="fas fa-chart-line fa-2x opacity-75"></i>
                         </div>
                     </div>
                 </div>
@@ -85,61 +86,66 @@
         </div>
     </div>
 
-    <!-- Charts Row -->
-    <div class="row mb-5">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
+    <!-- Charts Section - Responsive Grid -->
+    <div class="row g-3 mb-5">
+        <div class="col-12 col-lg-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-light">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-pie"></i>
+                        <i class="fas fa-chart-pie text-primary"></i>
                         Contributions by Type
                     </h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="contributionTypeChart" width="400" height="400"></canvas>
+                    <div class="chart-container" style="position: relative; height: 300px;">
+                        <canvas id="contributionTypeChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
+        <div class="col-12 col-lg-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-light">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-bar"></i>
+                        <i class="fas fa-chart-bar text-success"></i>
                         Top Contributors
                     </h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="topContributorsChart" width="400" height="400"></canvas>
+                    <div class="chart-container" style="position: relative; height: 300px;">
+                        <canvas id="topContributorsChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Recent Contributions -->
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
+    <!-- Main Content Layout - Responsive -->
+    <div class="row g-3">
+        <!-- Recent Contributions Section -->
+        <div class="col-12 col-xl-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-clock"></i>
+                        <i class="fas fa-clock text-info"></i>
                         Recent Contributions
                     </h5>
                     <a href="{{ url_for('add_contribution') }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus"></i> Add Contribution
+                        <i class="fas fa-plus"></i> Add
                     </a>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     {% if recent_contributions %}
                         <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
                                     <tr>
                                         <th>Contributor</th>
                                         <th>Repository</th>
-                                        <th>Type</th>
-                                        <th>Description</th>
-                                        <th>PR #</th>
+                                        <th class="d-none d-md-table-cell">Type</th>
+                                        <th class="d-none d-lg-table-cell">Description</th>
+                                        <th class="d-none d-sm-table-cell">PR #</th>
                                         <th>Date</th>
                                     </tr>
                                 </thead>
@@ -148,36 +154,34 @@
                                     <tr>
                                         <td>
                                             <a href="{{ url_for('contributor_detail', username=contribution.contributor.github_username) }}" 
-                                               class="text-decoration-none">
-                                                <strong>{{ contribution.contributor.name }}</strong><br>
+                                               class="text-decoration-none fw-bold">
+                                                {{ contribution.contributor.name }}<br>
                                                 <small class="text-muted">@{{ contribution.contributor.github_username }}</small>
                                             </a>
                                         </td>
                                         <td>
-                                            <code>{{ contribution.repo_name }}</code>
+                                            <code class="bg-light px-2 py-1 rounded">{{ contribution.repo_name }}</code>
                                         </td>
-                                        <td>
+                                        <td class="d-none d-md-table-cell">
                                             <span class="badge bg-{{ get_type_color(contribution.type) }}">
                                                 {{ contribution.type }}
                                             </span>
                                         </td>
-                                        <td>
-                                            <span class="text-truncate d-inline-block" style="max-width: 300px;" 
+                                        <td class="d-none d-lg-table-cell">
+                                            <span class="text-truncate d-inline-block" style="max-width: 250px;" 
                                                   title="{{ contribution.description }}">
                                                 {{ contribution.description }}
                                             </span>
                                         </td>
-                                        <td>
+                                        <td class="d-none d-sm-table-cell">
                                             {% if contribution.pr_number %}
-                                                <span class="badge bg-info">#{{ contribution.pr_number }}</span>
+                                                <span class="badge bg-info text-white">#{{ contribution.pr_number }}</span>
                                             {% else %}
                                                 <span class="text-muted">-</span>
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <small class="text-muted">
-                                                {{ contribution.date[:10] }}
-                                            </small>
+                                            <small class="text-muted">{{ contribution.date[:10] }}</small>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -188,182 +192,203 @@
                         <div class="text-center py-5">
                             <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                             <h5 class="text-muted">No contributions yet!</h5>
-                            <p class="text-muted">Start by adding some contributors and their contributions.</p>
-                            <a href="{{ url_for('add_contributor') }}" class="btn btn-primary me-2">
-                                <i class="fas fa-user-plus"></i> Add Contributor
-                            </a>
-                            <a href="{{ url_for('add_contribution') }}" class="btn btn-outline-primary">
-                                <i class="fas fa-code"></i> Add Contribution
-                            </a>
+                            <p class="text-muted mb-4">Start by adding some contributors and their contributions.</p>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('add_contributor') }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-user-plus"></i> Add Contributor
+                                </a>
+                                <a href="{{ url_for('add_contribution') }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-code"></i> Add Contribution
+                                </a>
+                            </div>
                         </div>
                     {% endif %}
                 </div>
             </div>
         </div>
         
-        <!-- Right Sidebar -->
-        <div class="col-md-4">
-            <!-- Git Pull Timing Widget -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">
-                        <i class="fab fa-git-alt text-warning"></i>
-                        Git Pull Tracker
-                    </h6>
-                    <button class="btn btn-sm btn-outline-success" id="runGitPull">
-                        <i class="fas fa-download"></i> Pull
-                    </button>
+        <!-- Right Sidebar - Responsive Stack -->
+        <div class="col-12 col-xl-4">
+            <div class="row g-3">
+                <!-- Git Pull Timing Widget -->
+                <div class="col-12 col-md-6 col-xl-12">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h6 class="mb-0">
+                                <i class="fab fa-git-alt text-warning"></i>
+                                Git Pull Tracker
+                            </h6>
+                            <button class="btn btn-sm btn-outline-success" id="runGitPull">
+                                <i class="fas fa-download"></i> Pull
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="git-status" id="gitStatus">
+                                <div class="d-flex align-items-center text-muted">
+                                    <i class="fas fa-clock me-2"></i>
+                                    <span>Ready to pull</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Pull History -->
+                            <div class="pull-history mt-3">
+                                <h6 class="text-muted mb-2 small">Recent Pulls</h6>
+                                <div class="pull-history-list" id="pullHistoryList">
+                                    <!-- Pull history items will be added here -->
+                                </div>
+                            </div>
+                            
+                            <!-- Stats -->
+                            <div class="git-stats mt-3 pt-3 border-top">
+                                <div class="row text-center g-2">
+                                    <div class="col-4">
+                                        <div class="fw-bold text-success small" id="avgPullTime">--</div>
+                                        <small class="text-muted d-block">Avg Time</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="fw-bold text-primary small" id="totalPulls">0</div>
+                                        <small class="text-muted d-block">Total Pulls</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="fw-bold text-info small" id="lastPullTime">--</div>
+                                        <small class="text-muted d-block">Last Pull</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="git-status" id="gitStatus">
-                        <div class="d-flex align-items-center text-muted">
-                            <i class="fas fa-clock me-2"></i>
-                            <span>Ready to pull</span>
+                
+                <!-- Quick Search Widget -->
+                <div class="col-12 col-md-6 col-xl-12">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">
+                                <i class="fas fa-search text-primary"></i>
+                                Quick Search
+                            </h6>
                         </div>
-                    </div>
-                    
-                    <!-- Pull History -->
-                    <div class="pull-history mt-3">
-                        <h6 class="text-muted mb-2">Recent Pulls</h6>
-                        <div class="pull-history-list" id="pullHistoryList">
-                            <!-- Pull history items will be added here -->
-                        </div>
-                    </div>
-                    
-                    <!-- Stats -->
-                    <div class="git-stats mt-3 pt-3 border-top">
-                        <div class="row text-center">
-                            <div class="col-4">
-                                <div class="fw-bold text-success" id="avgPullTime">--</div>
-                                <small class="text-muted">Avg Time</small>
+                        <div class="card-body">
+                            <div class="input-group search-box">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" class="form-control" id="quickSearch" 
+                                       placeholder="Search contributors..."
+                                       autocomplete="off">
                             </div>
-                            <div class="col-4">
-                                <div class="fw-bold text-primary" id="totalPulls">0</div>
-                                <small class="text-muted">Total Pulls</small>
+                            <div class="quick-search-results mt-3" id="quickSearchResults" style="display: none;">
+                                <div class="list-group list-group-flush">
+                                    <!-- Results will be populated here -->
+                                </div>
                             </div>
-                            <div class="col-4">
-                                <div class="fw-bold text-info" id="lastPullTime">--</div>
-                                <small class="text-muted">Last Pull</small>
+                            <div class="mt-3">
+                                <a href="{{ url_for('contributors') }}" class="btn btn-outline-primary btn-sm w-100">
+                                    <i class="fas fa-users"></i> View All
+                                </a>
                             </div>
                         </div>
                     </div>
+                </div>
+                
+                <!-- Achievement Badges Widget -->
+                <div class="col-12 col-md-6 col-xl-12">
+                    {% include 'badge_widget.html' %}
+                </div>
+                
+                <!-- Notification Widget -->
+                <div class="col-12 col-md-6 col-xl-12">
+                    {% include 'notification_widget.html' %}
                 </div>
             </div>
-            
-            <!-- Quick Search Widget -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h6 class="mb-0">
-                        <i class="fas fa-search text-primary"></i>
-                        Quick Search
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="input-group search-box">
-                        <span class="input-group-text">
-                            <i class="fas fa-search"></i>
-                        </span>
-                        <input type="text" class="form-control" id="quickSearch" 
-                               placeholder="Search contributors..."
-                               autocomplete="off">
-                    </div>
-                    <div class="quick-search-results mt-3" id="quickSearchResults" style="display: none;">
-                        <div class="list-group list-group-flush">
-                            <!-- Results will be populated here -->
-                        </div>
-                    </div>
-                    <div class="mt-2 text-center">
-                        <a href="{{ url_for('contributors') }}" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-users"></i> View All Contributors
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Achievement Badges Widget -->
-            {% include 'badge_widget.html' %}
-            
-            <!-- Notification Widget -->
-            {% include 'notification_widget.html' %}
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Load statistics data for charts
-    fetch('/api/stats')
-        .then(response => response.json())
-        .then(data => {
-            // Contribution Type Chart
-            const typeCtx = document.getElementById('contributionTypeChart').getContext('2d');
-            new Chart(typeCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(data.contributions_by_type),
-                    datasets: [{
-                        data: Object.values(data.contributions_by_type),
-                        backgroundColor: [
-                            '#FF6384',
-                            '#36A2EB',
-                            '#FFCE56',
-                            '#4BC0C0',
-                            '#9966FF',
-                            '#FF9F40'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-        });
-
-    // Load leaderboard data for top contributors chart
-    fetch('/api/leaderboard')
-        .then(response => response.json())
-        .then(data => {
-            const topContributors = data.slice(0, 5); // Top 5 contributors
-            
-            const contributorsCtx = document.getElementById('topContributorsChart').getContext('2d');
-            new Chart(contributorsCtx, {
-                type: 'bar',
-                data: {
-                    labels: topContributors.map(c => c.name),
-                    datasets: [{
-                        label: 'Contributions',
-                        data: topContributors.map(c => c.contribution_count),
-                        backgroundColor: '#36A2EB',
-                        borderColor: '#36A2EB',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load statistics data for charts
+        fetch('/api/stats')
+            .then(response => response.json())
+            .then(data => {
+                // Contribution Type Chart
+                const typeCtx = document.getElementById('contributionTypeChart');
+                if (typeCtx) {
+                    new Chart(typeCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: Object.keys(data.contributions_by_type),
+                            datasets: [{
+                                data: Object.values(data.contributions_by_type),
+                                backgroundColor: [
+                                    '#FF6384',
+                                    '#36A2EB',
+                                    '#FFCE56',
+                                    '#4BC0C0',
+                                    '#9966FF',
+                                    '#FF9F40'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
                             }
                         }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
+                    });
                 }
-            });
-        });
+            })
+            .catch(error => console.error('Error loading stats:', error));
+
+        // Load leaderboard data for top contributors chart
+        fetch('/api/leaderboard')
+            .then(response => response.json())
+            .then(data => {
+                const topContributors = data.slice(0, 5); // Top 5 contributors
+                
+                const contributorsCtx = document.getElementById('topContributorsChart');
+                if (contributorsCtx) {
+                    new Chart(contributorsCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: topContributors.map(c => c.name),
+                            datasets: [{
+                                label: 'Contributions',
+                                data: topContributors.map(c => c.contribution_count),
+                                backgroundColor: '#36A2EB',
+                                borderColor: '#36A2EB',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        stepSize: 1
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                }
+            })
+            .catch(error => console.error('Error loading leaderboard:', error));
+    });
     
     // Git Pull Timing Functionality
     const runGitPullBtn = document.getElementById('runGitPull');
